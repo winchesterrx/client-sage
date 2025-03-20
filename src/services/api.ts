@@ -6,7 +6,7 @@ const API_ENDPOINT = "https://xofome.online/api";
 
 
 // Modo offline forçado - defina como true para usar sempre o armazenamento local
-const FORCE_OFFLINE_MODE = true;
+const FORCE_OFFLINE_MODE = false;
 
 // Helper function to handle API errors
 const handleError = (error: any) => {

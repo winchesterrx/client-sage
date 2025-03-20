@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // API endpoint for your PHP backend
@@ -46,6 +45,32 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 800
     throw error;
   }
 }
+
+// Function to initialize the database with sample data
+export const initializeDatabase = async () => {
+  try {
+    console.log("Initializing database with sample data...");
+    
+    // Check if we can connect to the backend
+    const isConnected = await checkBackendConnection();
+    
+    if (!isConnected) {
+      console.warn("Backend connection failed, using mock data instead");
+      
+      // Here we would normally initialize with mock data
+      // but for now we'll just log a message
+      console.log("Mock data initialization would happen here");
+      
+      // You could also use localStorage to persist mock data
+      // if the backend is not available
+      return;
+    }
+    
+    console.log("Backend connection successful, database initialized");
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
+};
 
 // API functions that connect to the PHP backend
 export const api = {

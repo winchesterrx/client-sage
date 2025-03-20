@@ -25,5 +25,6 @@ echo json_encode([
     'status' => 'ok',
     'timestamp' => date('Y-m-d H:i:s'),
     'database' => $status,
-    'environment' => getenv('APP_ENV') ?: 'development'
+    'environment' => getenv('APP_ENV') ?: 'development',
+    'message' => 'Backend API is running'
 ]);

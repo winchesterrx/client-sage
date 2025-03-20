@@ -25,13 +25,19 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           toast.success("Conectado ao banco de dados com sucesso!");
         } else {
           console.warn("Using local storage fallback");
-          toast.warning("Usando armazenamento local como fallback. Suas alterações não serão salvas no servidor.");
+          toast.info("Usando armazenamento local para salvar os dados.", {
+            description: "Os dados serão salvos apenas no seu navegador.",
+            duration: 5000
+          });
         }
         
         setIsInitialized(true);
       } catch (error) {
         console.error("Failed to initialize:", error);
-        toast.error("Erro ao inicializar o banco de dados. Usando armazenamento local.");
+        toast.info("Usando armazenamento local para salvar os dados.", {
+          description: "Não foi possível conectar ao servidor.",
+          duration: 5000
+        });
         setIsInitialized(true);
       } finally {
         setIsLoading(false);
@@ -54,6 +60,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </div>
         ) : (
           <div className="container mx-auto py-8 px-6 max-w-7xl animate-fade-in">
+            {!isInitialized && (
+              <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
+                <p className="text-blue-700">
+                  Aplicação em modo offline. Os dados serão salvos apenas no seu navegador.
+                </p>
+              </div>
+            )}
             {children}
           </div>
         )}

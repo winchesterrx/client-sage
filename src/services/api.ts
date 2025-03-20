@@ -1,10 +1,13 @@
-
 import { toast } from "sonner";
 
 // API endpoint for your PHP backend
+// Você pode atualizar isso quando tiver o backend hospedado
 const API_ENDPOINT = process.env.NODE_ENV === 'production' 
   ? "https://your-production-backend-url.com/api" 
-  : "http://localhost:8000/api"; // Update these URLs with your actual backend URLs
+  : "http://localhost:8000/api";
+
+// Modo offline forçado - defina como true para usar sempre o armazenamento local
+const FORCE_OFFLINE_MODE = true;
 
 // Helper function to handle API errors
 const handleError = (error: any) => {
@@ -70,6 +73,12 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 800
 
 // Function to check backend connection with retry
 export const checkBackendConnection = async (retries = 2) => {
+  // Se o modo offline estiver forçado, retorna false imediatamente
+  if (FORCE_OFFLINE_MODE) {
+    console.log("Modo offline forçado ativo, não tentando conexão com o backend");
+    return false;
+  }
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       console.log(`Checking backend connection (attempt ${attempt + 1}/${retries + 1})...`);
@@ -112,12 +121,9 @@ export const initializeDatabase = async () => {
     if (!isConnected) {
       console.warn("Backend connection failed, using mock data instead");
       
-      // Here we would normally initialize with mock data
-      // but for now we'll just log a message
-      console.log("Mock data initialization would happen here");
+      // Inicializar dados de exemplo no localStorage
+      createMockData();
       
-      // You could also use localStorage to persist mock data
-      // if the backend is not available
       return false;
     }
     
@@ -135,25 +141,83 @@ const createMockData = () => {
   const hasMockData = localStorage.getItem('mock_data_initialized') === 'true';
   
   if (!hasMockData) {
-    // Initialize mock data structures in localStorage
-    if (!localStorage.getItem('mock_clients')) {
-      localStorage.setItem('mock_clients', JSON.stringify([]));
-    }
-    if (!localStorage.getItem('mock_services')) {
-      localStorage.setItem('mock_services', JSON.stringify([]));
-    }
-    if (!localStorage.getItem('mock_payments')) {
-      localStorage.setItem('mock_payments', JSON.stringify([]));
-    }
-    if (!localStorage.getItem('mock_projects')) {
-      localStorage.setItem('mock_projects', JSON.stringify([]));
-    }
-    if (!localStorage.getItem('mock_tasks')) {
-      localStorage.setItem('mock_tasks', JSON.stringify([]));
-    }
+    console.log("Initializing mock data in localStorage...");
+    
+    // Criar alguns clientes de exemplo
+    const mockClients = [
+      {
+        id: 1,
+        name: "Cliente Exemplo 1",
+        city: "São Paulo",
+        phone: "11999887766",
+        email: "cliente1@exemplo.com",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        name: "Cliente Exemplo 2",
+        city: "Rio de Janeiro",
+        phone: "21988776655",
+        email: "cliente2@exemplo.com",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+    
+    // Criar alguns serviços de exemplo
+    const mockServices = [
+      {
+        id: 1,
+        client_id: 1,
+        service_type: "Website",
+        price: 1500,
+        access_link: "https://website-cliente1.com",
+        username: "admin",
+        password: "senha123",
+        status: "active",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        client_id: 2,
+        service_type: "Hospedagem",
+        price: 50,
+        access_link: "https://cpanel-host.com",
+        username: "cliente2",
+        password: "senha456",
+        status: "active",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+    
+    // Criar alguns projetos de exemplo
+    const mockProjects = [
+      {
+        id: 1,
+        client_id: 1,
+        name: "Redesign Website",
+        description: "Redesenho completo do website corporativo",
+        status: "in_progress",
+        start_date: "2023-01-15",
+        end_date: "2023-03-30",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+    
+    // Salvar dados no localStorage
+    localStorage.setItem('mock_clients', JSON.stringify(mockClients));
+    localStorage.setItem('mock_services', JSON.stringify(mockServices));
+    localStorage.setItem('mock_projects', JSON.stringify(mockProjects));
+    localStorage.setItem('mock_payments', JSON.stringify([]));
+    localStorage.setItem('mock_tasks', JSON.stringify([]));
+    localStorage.setItem('mock_attachments', JSON.stringify([]));
     
     localStorage.setItem('mock_data_initialized', 'true');
-    console.log('Mock data storage initialized');
+    console.log('Mock data initialized with sample data');
   }
   
   return {

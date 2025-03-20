@@ -41,6 +41,11 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 800
   }
 }
 
+export const initializeDatabase = async () => {
+  console.log("initializeDatabase chamada (função temporária vazia)");
+  return true;
+};
+
 export const api = {
   get: async <T>(endpoint: string): Promise<T> => {
     try {
@@ -104,25 +109,6 @@ export const api = {
     delete: (id: number) => api.delete(`clients/${id}`),
   },
 
-  services: {
-    getAll: () => api.get<any[]>('services.php'),
-    getByClient: (clientId: number) => api.get<any[]>(`services.php?client_id=${clientId}`),
-    getById: (id: number) => api.get<any>(`services.php?id=${id}`),
-    create: (data: any) => api.post<any>('services', data),
-    update: (id: number, data: any) => api.put<any>(`services/${id}`, data),
-    delete: (id: number) => api.delete(`services/${id}`),
-  },
-
-  payments: {
-    getAll: () => api.get<any[]>('payments.php'),
-    getByClient: (clientId: number) => api.get<any[]>(`payments.php?client_id=${clientId}`),
-    getByService: (serviceId: number) => api.get<any[]>(`payments.php?service_id=${serviceId}`),
-    getById: (id: number) => api.get<any>(`payments.php?id=${id}`),
-    create: (data: any) => api.post<any>('payments', data),
-    update: (id: number, data: any) => api.put<any>(`payments/${id}`, data),
-    delete: (id: number) => api.delete(`payments/${id}`),
-  },
-
   projects: {
     getAll: () => api.get<any[]>('projects.php'),
     getByClient: (clientId: number) => api.get<any[]>(`projects.php?client_id=${clientId}`),
@@ -130,23 +116,5 @@ export const api = {
     create: (data: any) => api.post<any>('projects', data),
     update: (id: number, data: any) => api.put<any>(`projects/${id}`, data),
     delete: (id: number) => api.delete(`projects/${id}`),
-  },
-
-  tasks: {
-    getAll: () => api.get<any[]>('tasks.php'),
-    getByProject: (projectId: number) => api.get<any[]>(`tasks.php?project_id=${projectId}`),
-    getById: (id: number) => api.get<any>(`tasks.php?id=${id}`),
-    create: (data: any) => api.post<any>('tasks', data),
-    update: (id: number, data: any) => api.put<any>(`tasks/${id}`, data),
-    delete: (id: number) => api.delete(`tasks/${id}`),
-  },
-
-  attachments: {
-    getAll: () => api.get<any[]>('attachments.php'),
-    getByRelated: (type: string, id: number) =>
-      api.get<any[]>(`attachments.php?related_type=${type}&related_id=${id}`),
-    getById: (id: number) => api.get<any>(`attachments.php?id=${id}`),
-    create: (data: any) => api.post<any>('attachments', data),
-    delete: (id: number) => api.delete(`attachments/${id}`),
   },
 };

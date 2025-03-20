@@ -1,21 +1,48 @@
-
 <?php
-// Configuração do banco de dados
-$host = 'clientesowl-db.mysql.uhserver.com'; // Host do banco de dados
-$dbname = 'clientesowl_db'; // Nome do banco de dados
-$username = 'gsilva1930'; // Nome de usuário do MySQL
-$password = '@Saopaulop45'; // Senha do MySQL
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
-// Tentar estabelecer a conexão com o banco de dados
+// Database configuration
+$host = getenv('DB_HOST') ?: 'localhost';
+$dbname = getenv('DB_NAME') ?: 'client_sage';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASSWORD') ?: '';
+
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    // Definir o modo de erro do PDO para exceção
+    // Create PDO connection
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
+    
+    // Set the PDO error mode to exception
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // Definir o modo de busca padrão para retornar um array associativo
+    
+    // Set default fetch mode to associative array
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
-    // Em caso de erro na conexão, exibir mensagem de erro
-    die("Falha na conexão com o banco de dados: " . $e->getMessage());
+    
+    // Use prepared statements for security
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+    
+    // Return the connection
+    return $pdo;
+} catch (PDOException $e) {
+    // Log the error
+    error_log("Database Connection Error: " . $e->getMessage());
+    
+    // For API endpoints, we might want to return a proper error
+    if (strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Database connection failed',
+            'error' => $e->getMessage()
+        ]);
+        exit;
+    }
+    
+    // Otherwise, we might want to throw the exception for the application to handle
+    throw new Exception("Database connection failed: " . $e->getMessage());
 }
 
 // Função para executar uma consulta SELECT

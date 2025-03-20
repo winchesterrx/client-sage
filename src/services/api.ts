@@ -68,34 +68,6 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeout = 800
   }
 }
 
-// Function to initialize the database with sample data
-export const initializeDatabase = async () => {
-  try {
-    console.log("Initializing database with sample data...");
-    
-    // Check if we can connect to the backend
-    const isConnected = await checkBackendConnection();
-    
-    if (!isConnected) {
-      console.warn("Backend connection failed, using mock data instead");
-      
-      // Here we would normally initialize with mock data
-      // but for now we'll just log a message
-      console.log("Mock data initialization would happen here");
-      
-      // You could also use localStorage to persist mock data
-      // if the backend is not available
-      return false;
-    }
-    
-    console.log("Backend connection successful, database initialized");
-    return true;
-  } catch (error) {
-    console.error("Error initializing database:", error);
-    return false;
-  }
-};
-
 // Function to check backend connection with retry
 export const checkBackendConnection = async (retries = 2) => {
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -127,6 +99,34 @@ export const checkBackendConnection = async (retries = 2) => {
   
   console.error("All backend connection attempts failed");
   return false;
+};
+
+// Function to initialize the database with sample data
+export const initializeDatabase = async () => {
+  try {
+    console.log("Initializing database with sample data...");
+    
+    // Check if we can connect to the backend
+    const isConnected = await checkBackendConnection();
+    
+    if (!isConnected) {
+      console.warn("Backend connection failed, using mock data instead");
+      
+      // Here we would normally initialize with mock data
+      // but for now we'll just log a message
+      console.log("Mock data initialization would happen here");
+      
+      // You could also use localStorage to persist mock data
+      // if the backend is not available
+      return false;
+    }
+    
+    console.log("Backend connection successful, database initialized");
+    return true;
+  } catch (error) {
+    console.error("Error initializing database:", error);
+    return false;
+  }
 };
 
 // Create a mock data system as fallback
@@ -422,6 +422,3 @@ export const api = {
     delete: (id: number) => api.delete(`attachments/${id}`),
   },
 };
-
-// Export functions that should be accessible from the outside
-export { checkBackendConnection };

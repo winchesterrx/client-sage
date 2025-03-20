@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
@@ -94,15 +93,19 @@ const ClientDetail = () => {
   const { data: client, isLoading: isLoadingClient } = useQuery({
     queryKey: ['client', clientId],
     queryFn: () => api.clients.getById(clientId),
-    onSuccess: (data) => {
-      setEditClient({
-        name: data.name,
-        city: data.city,
-        phone: data.phone,
-        email: data.email || '',
-      });
-    },
   });
+
+  // Set edit form data when client data is loaded
+  useEffect(() => {
+    if (client) {
+      setEditClient({
+        name: client.name,
+        city: client.city,
+        phone: client.phone,
+        email: client.email || '',
+      });
+    }
+  }, [client]);
 
   // Fetch client services
   const { data: services = [], refetch: refetchServices } = useQuery({

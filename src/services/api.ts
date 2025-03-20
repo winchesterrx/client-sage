@@ -2,9 +2,8 @@ import { toast } from "sonner";
 
 // API endpoint for your PHP backend
 // Você pode atualizar isso quando tiver o backend hospedado
-const API_ENDPOINT = process.env.NODE_ENV === 'production' 
-  ? "https://your-production-backend-url.com/api" 
-  : "http://localhost:8000/api";
+const API_ENDPOINT = "https://xofome.online/api";
+
 
 // Modo offline forçado - defina como true para usar sempre o armazenamento local
 const FORCE_OFFLINE_MODE = true;

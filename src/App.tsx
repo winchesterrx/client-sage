@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 
 // Pages
+import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/clients/Clients";
 import ClientDetail from "./pages/clients/ClientDetail";
@@ -27,7 +28,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
           <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
           <Route path="/clients/:id" element={<AppLayout><ClientDetail /></AppLayout>} />
           <Route path="/services" element={<AppLayout><Services /></AppLayout>} />

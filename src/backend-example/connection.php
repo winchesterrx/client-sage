@@ -5,10 +5,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Database configuration
-$host = getenv('DB_HOST') ?: 'localhost';
-$dbname = getenv('DB_NAME') ?: 'client_sage';
-$username = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASSWORD') ?: '';
+$host = getenv('DB_HOST') ?: 'clientesowl-db.mysql.uhserver.com';
+$dbname = getenv('DB_NAME') ?: 'clientesowl_db';
+$username = getenv('DB_USER') ?: 'gsilva1930';
+$password = getenv('DB_PASSWORD') ?: '@Saopaulop45';
 
 try {
     // Create PDO connection

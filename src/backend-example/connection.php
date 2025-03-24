@@ -1,48 +1,49 @@
+
 <?php
-// Enable error reporting for debugging
+// Habilitar relatório de erros para depuração
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Database configuration
-$host = getenv('DB_HOST') ?: 'clientesowl-db.mysql.uhserver.com';
-$dbname = getenv('DB_NAME') ?: 'clientesowl_db';
-$username = getenv('DB_USER') ?: 'gsilva1930';
-$password = getenv('DB_PASSWORD') ?: '@Saopaulop45';
+// Configuração do banco de dados
+$host = 'clientesowl-db.mysql.uhserver.com';
+$dbname = 'clientesowl_db';
+$username = 'gsilva1930';
+$password = '@Saopaulop45';
 
 try {
-    // Create PDO connection
+    // Criar conexão PDO
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     
-    // Set the PDO error mode to exception
+    // Definir o modo de erro PDO para exceção
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Set default fetch mode to associative array
+    // Definir o modo de busca padrão para array associativo
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
-    // Use prepared statements for security
+    // Usar declarações preparadas para segurança
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     
-    // Return the connection
+    // Retornar a conexão
     return $pdo;
 } catch (PDOException $e) {
-    // Log the error
-    error_log("Database Connection Error: " . $e->getMessage());
+    // Registrar o erro
+    error_log("Erro de Conexão com o Banco de Dados: " . $e->getMessage());
     
-    // For API endpoints, we might want to return a proper error
+    // Para endpoints de API, queremos retornar um erro adequado
     if (strpos($_SERVER['REQUEST_URI'], '/api/') !== false) {
         header('Content-Type: application/json');
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
-            'message' => 'Database connection failed',
+            'message' => 'Falha na conexão com o banco de dados',
             'error' => $e->getMessage()
         ]);
         exit;
     }
     
-    // Otherwise, we might want to throw the exception for the application to handle
-    throw new Exception("Database connection failed: " . $e->getMessage());
+    // Caso contrário, podemos lançar a exceção para que o aplicativo a trate
+    throw new Exception("Falha na conexão com o banco de dados: " . $e->getMessage());
 }
 
 // Função para executar uma consulta SELECT
@@ -53,7 +54,8 @@ function select($query, $params = []) {
         $stmt->execute($params);
         return $stmt->fetchAll();
     } catch(PDOException $e) {
-        die("Erro na consulta: " . $e->getMessage());
+        error_log("Erro na consulta: " . $e->getMessage());
+        throw new Exception("Erro na consulta: " . $e->getMessage());
     }
 }
 
@@ -70,7 +72,8 @@ function insert($table, $data) {
         $stmt->execute($data);
         return $pdo->lastInsertId();
     } catch(PDOException $e) {
-        die("Erro ao inserir dados: " . $e->getMessage());
+        error_log("Erro ao inserir dados: " . $e->getMessage());
+        throw new Exception("Erro ao inserir dados: " . $e->getMessage());
     }
 }
 
@@ -91,7 +94,8 @@ function update($table, $data, $where, $whereParams = []) {
         $stmt->execute(array_merge($data, $whereParams));
         return $stmt->rowCount();
     } catch(PDOException $e) {
-        die("Erro ao atualizar dados: " . $e->getMessage());
+        error_log("Erro ao atualizar dados: " . $e->getMessage());
+        throw new Exception("Erro ao atualizar dados: " . $e->getMessage());
     }
 }
 
@@ -105,7 +109,8 @@ function delete($table, $where, $params = []) {
         $stmt->execute($params);
         return $stmt->rowCount();
     } catch(PDOException $e) {
-        die("Erro ao excluir dados: " . $e->getMessage());
+        error_log("Erro ao excluir dados: " . $e->getMessage());
+        throw new Exception("Erro ao excluir dados: " . $e->getMessage());
     }
 }
 

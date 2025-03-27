@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { Service, Payment, Project } from '@/types/database';
 
 const ClientDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -831,7 +832,10 @@ const ClientDetail = () => {
                   id="service-status"
                   className="w-full border rounded-md p-2"
                   value={newService.status}
-                  onChange={(e) => setNewService({ ...newService, status: e.target.value })}
+                  onChange={(e) => setNewService({ 
+                    ...newService, 
+                    status: e.target.value as 'active' | 'inactive' | 'pending' 
+                  })}
                 >
                   <option value="active">Ativo</option>
                   <option value="inactive">Inativo</option>
@@ -933,7 +937,10 @@ const ClientDetail = () => {
                   id="payment-status"
                   className="w-full border rounded-md p-2"
                   value={newPayment.status}
-                  onChange={(e) => setNewPayment({ ...newPayment, status: e.target.value })}
+                  onChange={(e) => setNewPayment({ 
+                    ...newPayment, 
+                    status: e.target.value as 'pending' | 'paid' | 'overdue' 
+                  })}
                 >
                   <option value="pending">Pendente</option>
                   <option value="paid">Pago</option>
@@ -1019,7 +1026,10 @@ const ClientDetail = () => {
                   id="project-status"
                   className="w-full border rounded-md p-2"
                   value={newProject.status}
-                  onChange={(e) => setNewProject({ ...newProject, status: e.target.value })}
+                  onChange={(e) => setNewProject({ 
+                    ...newProject, 
+                    status: e.target.value as 'planning' | 'in_progress' | 'completed' | 'on_hold' 
+                  })}
                 >
                   <option value="planning">Planejamento</option>
                   <option value="in_progress">Em Andamento</option>

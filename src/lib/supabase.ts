@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Client, Service, Payment, Project, Task, Attachment } from '@/types/database';
 
@@ -64,7 +63,7 @@ export const db = {
     }
   },
   
-  create: async <T extends { id?: number }>(table: string, item: T): Promise<T> => {
+  create: async <T extends { id?: number; created_at?: string; updated_at?: string }>(table: string, item: T): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item);
       
@@ -84,7 +83,7 @@ export const db = {
     }
   },
   
-  update: async <T extends { id?: number }>(table: string, id: number, item: Partial<T>): Promise<T> => {
+  update: async <T extends { id?: number; created_at?: string; updated_at?: string }>(table: string, id: number, item: Partial<T>): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item as T);
       

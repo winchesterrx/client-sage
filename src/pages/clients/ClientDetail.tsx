@@ -57,7 +57,6 @@ const ClientDetail = () => {
     email: '',
   });
 
-  // Service forms
   const [showAddServiceDialog, setShowAddServiceDialog] = useState(false);
   const [newService, setNewService] = useState({
     service_type: '',
@@ -65,37 +64,33 @@ const ClientDetail = () => {
     access_link: '',
     username: '',
     password: '',
-    status: 'active',
+    status: 'active' as 'active' | 'inactive' | 'pending',
   });
 
-  // Payment forms
   const [showAddPaymentDialog, setShowAddPaymentDialog] = useState(false);
   const [newPayment, setNewPayment] = useState({
     service_id: '',
     amount: '',
     payment_date: '',
     due_date: '',
-    status: 'pending',
+    status: 'pending' as 'paid' | 'pending' | 'overdue',
     payment_method: '',
     notes: '',
   });
 
-  // Project forms
   const [showAddProjectDialog, setShowAddProjectDialog] = useState(false);
   const [newProject, setNewProject] = useState({
     name: '',
     description: '',
-    status: 'planning',
+    status: 'planning' as 'planning' | 'in_progress' | 'completed' | 'on_hold',
     start_date: '',
   });
 
-  // Fetch client data
   const { data: client, isLoading: isLoadingClient } = useQuery({
     queryKey: ['client', clientId],
     queryFn: () => api.clients.getById(clientId),
   });
 
-  // Set edit form data when client data is loaded
   useEffect(() => {
     if (client) {
       setEditClient({
@@ -107,21 +102,18 @@ const ClientDetail = () => {
     }
   }, [client]);
 
-  // Fetch client services
   const { data: services = [], refetch: refetchServices } = useQuery({
     queryKey: ['clientServices', clientId],
     queryFn: () => api.services.getByClient(clientId),
     enabled: !!clientId,
   });
 
-  // Fetch client payments
   const { data: payments = [], refetch: refetchPayments } = useQuery({
     queryKey: ['clientPayments', clientId],
     queryFn: () => api.payments.getByClient(clientId),
     enabled: !!clientId,
   });
 
-  // Fetch client projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['clientProjects', clientId],
     queryFn: () => api.projects.getByClient(clientId),
@@ -148,7 +140,6 @@ const ClientDetail = () => {
     );
   }
 
-  // Handle client update
   const handleUpdateClient = async () => {
     try {
       await api.clients.update(clientId, editClient);
@@ -162,7 +153,6 @@ const ClientDetail = () => {
     }
   };
 
-  // Handle adding a new service
   const handleAddService = async () => {
     try {
       const serviceData = {
@@ -184,7 +174,7 @@ const ClientDetail = () => {
         access_link: '',
         username: '',
         password: '',
-        status: 'active',
+        status: 'active' as 'active' | 'inactive' | 'pending',
       });
       toast.success('Serviço adicionado com sucesso!');
     } catch (error) {
@@ -193,7 +183,6 @@ const ClientDetail = () => {
     }
   };
 
-  // Handle adding a new payment
   const handleAddPayment = async () => {
     try {
       const paymentData = {
@@ -215,7 +204,7 @@ const ClientDetail = () => {
         amount: '',
         payment_date: '',
         due_date: '',
-        status: 'pending',
+        status: 'pending' as 'paid' | 'pending' | 'overdue',
         payment_method: '',
         notes: '',
       });
@@ -226,7 +215,6 @@ const ClientDetail = () => {
     }
   };
 
-  // Handle adding a new project
   const handleAddProject = async () => {
     try {
       const projectData = {
@@ -244,7 +232,7 @@ const ClientDetail = () => {
       setNewProject({
         name: '',
         description: '',
-        status: 'planning',
+        status: 'planning' as 'planning' | 'in_progress' | 'completed' | 'on_hold',
         start_date: '',
       });
       toast.success('Projeto adicionado com sucesso!');
@@ -254,13 +242,11 @@ const ClientDetail = () => {
     }
   };
 
-  // Copy password to clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copiado para a área de transferência!');
   };
 
-  // Toggle password visibility
   const togglePasswordVisibility = (serviceId: number) => {
     setShowPasswordMap(prev => ({
       ...prev,
@@ -268,7 +254,6 @@ const ClientDetail = () => {
     }));
   };
 
-  // Delete service
   const handleDeleteService = async (serviceId: number) => {
     if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
     
@@ -282,7 +267,6 @@ const ClientDetail = () => {
     }
   };
 
-  // Delete payment
   const handleDeletePayment = async (paymentId: number) => {
     if (!confirm('Tem certeza que deseja excluir este pagamento?')) return;
     
@@ -296,7 +280,6 @@ const ClientDetail = () => {
     }
   };
 
-  // Delete project
   const handleDeleteProject = async (projectId: number) => {
     if (!confirm('Tem certeza que deseja excluir este projeto?')) return;
     
@@ -343,7 +326,6 @@ const ClientDetail = () => {
         </div>
       </div>
 
-      {/* Client Info Card */}
       <Card className="bg-white shadow-sm border">
         <CardHeader>
           <CardTitle>Informações do Cliente</CardTitle>
@@ -383,7 +365,6 @@ const ClientDetail = () => {
         </CardContent>
       </Card>
 
-      {/* Tabs for Services, Payments, and Projects */}
       <Tabs defaultValue="services">
         <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="services" className="flex items-center gap-2">
@@ -400,7 +381,6 @@ const ClientDetail = () => {
           </TabsTrigger>
         </TabsList>
         
-        {/* Services Tab */}
         <TabsContent value="services">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Serviços</h2>
@@ -537,7 +517,6 @@ const ClientDetail = () => {
           )}
         </TabsContent>
         
-        {/* Payments Tab */}
         <TabsContent value="payments">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Pagamentos</h2>
@@ -624,7 +603,6 @@ const ClientDetail = () => {
           )}
         </TabsContent>
         
-        {/* Projects Tab */}
         <TabsContent value="projects">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Projetos</h2>
@@ -709,7 +687,6 @@ const ClientDetail = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Client Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
@@ -774,7 +751,6 @@ const ClientDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Service Dialog */}
       <Dialog open={showAddServiceDialog} onOpenChange={setShowAddServiceDialog}>
         <DialogContent>
           <DialogHeader>
@@ -884,7 +860,6 @@ const ClientDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Payment Dialog */}
       <Dialog open={showAddPaymentDialog} onOpenChange={setShowAddPaymentDialog}>
         <DialogContent>
           <DialogHeader>
@@ -1005,7 +980,6 @@ const ClientDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Project Dialog */}
       <Dialog open={showAddProjectDialog} onOpenChange={setShowAddProjectDialog}>
         <DialogContent>
           <DialogHeader>

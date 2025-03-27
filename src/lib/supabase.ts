@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Client, Service, Payment, Project, Task, Attachment } from '@/types/database';
 
@@ -6,6 +7,17 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://seu-projeto.su
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sua-chave-anon-key';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Function to check if Supabase connection is working
+export const checkSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.from('clients').select('count', { count: 'exact', head: true });
+    return !error;
+  } catch (e) {
+    console.error('Error checking Supabase connection:', e);
+    return false;
+  }
+};
 
 // Function to handle timestamps
 // Define a type that includes the timestamp properties we want to modify

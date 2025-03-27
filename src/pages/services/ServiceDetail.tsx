@@ -219,7 +219,7 @@ const ServiceDetail = () => {
           <CardTitle>Pagamentos Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          {safePayments.length > 0 ? (
+          {payments.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -231,7 +231,7 @@ const ServiceDetail = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {safePayments.map((payment) => {
+                  {payments.map((payment) => {
                     const getPaymentStatusInfo = (status: string, dueDate: string) => {
                       const now = new Date();
                       const due = new Date(dueDate);

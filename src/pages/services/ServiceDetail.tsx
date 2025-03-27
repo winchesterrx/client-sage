@@ -31,11 +31,14 @@ const ServiceDetail = () => {
   });
 
   // Fetch payments for this service
-  const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
+  const { data: paymentsData = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ['servicePayments', serviceId],
     queryFn: () => api.payments.getByService(serviceId),
     enabled: !!serviceId,
   });
+
+  // Ensure payments is always an array
+  const payments = Array.isArray(paymentsData) ? paymentsData : [];
 
   if (isLoadingService) {
     return (
@@ -56,9 +59,6 @@ const ServiceDetail = () => {
       </div>
     );
   }
-
-  // Ensure payments is always an array
-  const safePayments = Array.isArray(payments) ? payments : [];
 
   // Helper functions
   const getServiceStatusInfo = (status: string) => {

@@ -1,17 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 import { Client, Service, Payment, Project, Task, Attachment } from '@/types/database';
 
-// Crie uma instância do cliente Supabase
-const supabaseUrl = 'https://seu-projeto.supabase.co';
-const supabaseKey = 'sua-chave-anon-key';
+// Create a Supabase client instance with your project URL and anon key
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://seu-projeto.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sua-chave-anon-key';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Função para gerenciar timestamps
-const handleTimestamps = <T extends { created_at?: string; updated_at?: string }>(item: T): T => {
+// Function to handle timestamps
+const handleTimestamps = <T extends Record<string, any>>(item: T): T => {
   const now = new Date().toISOString();
   
-  // Certifique-se de que os timestamps estão no formato ISO para compatibilidade
+  // Make sure timestamps are in ISO format for compatibility
   if (!item.created_at) {
     item.created_at = now;
   }
@@ -21,10 +21,10 @@ const handleTimestamps = <T extends { created_at?: string; updated_at?: string }
   return item;
 };
 
-// Função para converter os resultados do Supabase para o formato esperado pela aplicação
+// Function to convert Supabase results to the expected format
 const mapResultData = <T>(data: T[]): T[] => {
   return data.map(item => {
-    // Converte timestamps para ISO string se eles estiverem em formato Date
+    // Convert timestamps to ISO string if they are in Date format
     if (item) {
       if ((item as any).created_at instanceof Date) {
         (item as any).created_at = (item as any).created_at.toISOString();
@@ -37,9 +37,9 @@ const mapResultData = <T>(data: T[]): T[] => {
   });
 };
 
-// Funções para operações de banco de dados
+// Database operations
 export const db = {
-  // Operações genéricas
+  // Generic operations
   get: async <T>(table: string, id?: number, queryKey?: string, queryValue?: any): Promise<T[]> => {
     try {
       let query = supabase.from(table).select('*');
@@ -63,7 +63,7 @@ export const db = {
     }
   },
   
-  create: async <T extends { id?: number; created_at?: string; updated_at?: string }>(table: string, item: T): Promise<T> => {
+  create: async <T extends Record<string, any>>(table: string, item: T): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item);
       
@@ -83,7 +83,7 @@ export const db = {
     }
   },
   
-  update: async <T extends { id?: number; created_at?: string; updated_at?: string }>(table: string, id: number, item: Partial<T>): Promise<T> => {
+  update: async <T extends Record<string, any>>(table: string, id: number, item: Partial<T>): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item as T);
       
@@ -120,7 +120,7 @@ export const db = {
     }
   },
   
-  // Operações específicas por entidade
+  // Specific entity operations
   clients: {
     getAll: () => db.get<Client>('clients'),
     getById: (id: number) => db.get<Client>('clients', id).then(data => data[0]),
@@ -183,7 +183,7 @@ export const db = {
   }
 };
 
-// Função para fazer upload de arquivos para o storage do Supabase
+// Function to upload files to Supabase storage
 export const uploadFile = async (
   file: File,
   bucketName: string,
@@ -201,7 +201,7 @@ export const uploadFile = async (
       throw error;
     }
     
-    // Retorna o caminho do arquivo no Supabase
+    // Return the file path in Supabase
     return data.path;
   } catch (error) {
     console.error('Error uploading file:', error);
@@ -209,7 +209,7 @@ export const uploadFile = async (
   }
 };
 
-// Função para obter URL pública de um arquivo
+// Function to get public URL of a file
 export const getPublicUrl = (bucketName: string, path: string): string => {
   const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
   return data.publicUrl;

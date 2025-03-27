@@ -11,22 +11,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Incluir o arquivo de conexão
+// Include the connection file
 require_once '../connection.php';
 
-// Obter o método HTTP
+// Get the HTTP method
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Obter dados do corpo da requisição
+// Get data from the request body
 $data = json_decode(file_get_contents('php://input'), true);
 
-// Log da requisição para depuração
+// Log the request for debugging
 error_log("Request Method: $method");
 error_log("Request Data: " . json_encode($data));
 error_log("Request Query: " . json_encode($_GET));
 
+// IMPORTANT: This file is kept for backward compatibility
+// In production, use the Supabase integration instead
+// The database schema for Supabase can be found in the project documentation
+
 try {
-    // Processar a requisição de acordo com o método HTTP
+    // Process the request based on the HTTP method
     switch ($method) {
         case 'GET':
             // Verificar se um ID foi informado

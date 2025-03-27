@@ -8,7 +8,14 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sua-chave-anon-ke
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Function to handle timestamps
-const handleTimestamps = <T extends Record<string, any>>(item: T): T => {
+// Define a type that includes the timestamp properties we want to modify
+type WithTimestamps = {
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: any;  // Allow other properties
+};
+
+const handleTimestamps = <T extends WithTimestamps>(item: T): T => {
   const now = new Date().toISOString();
   
   // Make sure timestamps are in ISO format for compatibility
@@ -63,7 +70,7 @@ export const db = {
     }
   },
   
-  create: async <T extends Record<string, any>>(table: string, item: T): Promise<T> => {
+  create: async <T extends WithTimestamps>(table: string, item: T): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item);
       
@@ -83,7 +90,7 @@ export const db = {
     }
   },
   
-  update: async <T extends Record<string, any>>(table: string, id: number, item: Partial<T>): Promise<T> => {
+  update: async <T extends WithTimestamps>(table: string, id: number, item: Partial<T>): Promise<T> => {
     try {
       const preparedItem = handleTimestamps(item as T);
       

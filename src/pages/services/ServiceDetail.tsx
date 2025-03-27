@@ -31,7 +31,7 @@ const ServiceDetail = () => {
   });
 
   // Fetch payments for this service
-  const { data: payments = [] } = useQuery({
+  const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ['servicePayments', serviceId],
     queryFn: () => api.payments.getByService(serviceId),
     enabled: !!serviceId,
@@ -56,6 +56,9 @@ const ServiceDetail = () => {
       </div>
     );
   }
+
+  // Ensure payments is always an array
+  const safePayments = Array.isArray(payments) ? payments : [];
 
   // Helper functions
   const getServiceStatusInfo = (status: string) => {
@@ -216,7 +219,7 @@ const ServiceDetail = () => {
           <CardTitle>Pagamentos Recentes</CardTitle>
         </CardHeader>
         <CardContent>
-          {payments.length > 0 ? (
+          {safePayments.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -228,7 +231,7 @@ const ServiceDetail = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment) => {
+                  {safePayments.map((payment) => {
                     const getPaymentStatusInfo = (status: string, dueDate: string) => {
                       const now = new Date();
                       const due = new Date(dueDate);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -140,6 +141,11 @@ const ClientDetail = () => {
       </div>
     );
   }
+
+  // Ensure that services, payments, and projects are always arrays
+  const safeServices = Array.isArray(services) ? services : [];
+  const safePayments = Array.isArray(payments) ? payments : [];
+  const safeProjects = Array.isArray(projects) ? projects : [];
 
   const handleUpdateClient = async () => {
     try {
@@ -394,9 +400,9 @@ const ClientDetail = () => {
             </Button>
           </div>
           
-          {services.length > 0 ? (
+          {safeServices.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {services.map((service) => {
+              {safeServices.map((service) => {
                 const statusInfo = getServiceStatusInfo(service.status);
                 const isPasswordVisible = showPasswordMap[service.id] || false;
                 
@@ -524,14 +530,14 @@ const ClientDetail = () => {
             <Button
               onClick={() => setShowAddPaymentDialog(true)}
               className="flex items-center gap-2"
-              disabled={!services.length}
+              disabled={!safeServices.length}
             >
               <Plus className="h-4 w-4" />
               <span>Registrar Pagamento</span>
             </Button>
           </div>
           
-          {payments.length > 0 ? (
+          {safePayments.length > 0 ? (
             <Card className="border">
               <CardContent className="p-0">
                 <table className="w-full">
@@ -546,8 +552,8 @@ const ClientDetail = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((payment) => {
-                      const service = services.find(s => s.id === payment.service_id);
+                    {safePayments.map((payment) => {
+                      const service = safeServices.find(s => s.id === payment.service_id);
                       const statusInfo = getPaymentStatusInfo(payment.status, payment.due_date);
                       
                       return (
@@ -585,7 +591,7 @@ const ClientDetail = () => {
             <Card className="bg-gray-50 border-dashed border-2 border-gray-200">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <p className="text-gray-500 mb-4">Nenhum pagamento registrado</p>
-                {services.length > 0 ? (
+                {safeServices.length > 0 ? (
                   <Button
                     onClick={() => setShowAddPaymentDialog(true)}
                     variant="outline"
@@ -616,9 +622,9 @@ const ClientDetail = () => {
             </Button>
           </div>
           
-          {projects.length > 0 ? (
+          {safeProjects.length > 0 ? (
             <div className="grid grid-cols-1 gap-4">
-              {projects.map((project) => {
+              {safeProjects.map((project) => {
                 const statusInfo = getProjectStatusInfo(project.status);
                 
                 return (
@@ -882,7 +888,7 @@ const ClientDetail = () => {
                   onChange={(e) => setNewPayment({ ...newPayment, service_id: e.target.value })}
                 >
                   <option value="">Selecione um serviço</option>
-                  {services.map((service) => (
+                  {safeServices.map((service) => (
                     <option key={service.id} value={service.id}>
                       {service.service_type} - {formatCurrency(service.price)}
                     </option>

@@ -29,7 +29,9 @@ const handleTimestamps = <T extends WithTimestamps>(item: T): T => {
 };
 
 // Function to convert Supabase results to the expected format
-const mapResultData = <T>(data: T[]): T[] => {
+const mapResultData = <T>(data: T[] | null | undefined): T[] => {
+  if (!data) return []; // Return empty array if data is null or undefined
+  
   return data.map(item => {
     // Convert timestamps to ISO string if they are in Date format
     if (item) {
@@ -66,7 +68,8 @@ export const db = {
       return mapResultData(data) as T[];
     } catch (error) {
       console.error(`Error fetching data from ${table}:`, error);
-      throw error;
+      // Return empty array on error instead of throwing
+      return [];
     }
   },
   
@@ -130,7 +133,7 @@ export const db = {
   // Specific entity operations
   clients: {
     getAll: () => db.get<Client>('clients'),
-    getById: (id: number) => db.get<Client>('clients', id).then(data => data[0]),
+    getById: (id: number) => db.get<Client>('clients', id).then(data => data[0] || null),
     create: (client: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Client>('clients', client as Client),
     update: (id: number, client: Partial<Client>) => db.update<Client>('clients', id, client),
@@ -140,7 +143,7 @@ export const db = {
   services: {
     getAll: () => db.get<Service>('services'),
     getByClient: (clientId: number) => db.get<Service>('services', undefined, 'client_id', clientId),
-    getById: (id: number) => db.get<Service>('services', id).then(data => data[0]),
+    getById: (id: number) => db.get<Service>('services', id).then(data => data[0] || null),
     create: (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Service>('services', service as Service),
     update: (id: number, service: Partial<Service>) => db.update<Service>('services', id, service),
@@ -151,7 +154,7 @@ export const db = {
     getAll: () => db.get<Payment>('payments'),
     getByClient: (clientId: number) => db.get<Payment>('payments', undefined, 'client_id', clientId),
     getByService: (serviceId: number) => db.get<Payment>('payments', undefined, 'service_id', serviceId),
-    getById: (id: number) => db.get<Payment>('payments', id).then(data => data[0]),
+    getById: (id: number) => db.get<Payment>('payments', id).then(data => data[0] || null),
     create: (payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Payment>('payments', payment as Payment),
     update: (id: number, payment: Partial<Payment>) => db.update<Payment>('payments', id, payment),
@@ -161,7 +164,7 @@ export const db = {
   projects: {
     getAll: () => db.get<Project>('projects'),
     getByClient: (clientId: number) => db.get<Project>('projects', undefined, 'client_id', clientId),
-    getById: (id: number) => db.get<Project>('projects', id).then(data => data[0]),
+    getById: (id: number) => db.get<Project>('projects', id).then(data => data[0] || null),
     create: (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Project>('projects', project as Project),
     update: (id: number, project: Partial<Project>) => db.update<Project>('projects', id, project),
@@ -171,7 +174,7 @@ export const db = {
   tasks: {
     getAll: () => db.get<Task>('tasks'),
     getByProject: (projectId: number) => db.get<Task>('tasks', undefined, 'project_id', projectId),
-    getById: (id: number) => db.get<Task>('tasks', id).then(data => data[0]),
+    getById: (id: number) => db.get<Task>('tasks', id).then(data => data[0] || null),
     create: (task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Task>('tasks', task as Task),
     update: (id: number, task: Partial<Task>) => db.update<Task>('tasks', id, task),
@@ -183,7 +186,7 @@ export const db = {
     getByRelated: (relatedType: string, relatedId: number) => 
       db.get<Attachment>('attachments', undefined, 'related_id', relatedId)
         .then(data => data.filter(item => item.related_type === relatedType)),
-    getById: (id: number) => db.get<Attachment>('attachments', id).then(data => data[0]),
+    getById: (id: number) => db.get<Attachment>('attachments', id).then(data => data[0] || null),
     create: (attachment: Omit<Attachment, 'id' | 'created_at' | 'updated_at'>) => 
       db.create<Attachment>('attachments', attachment as Attachment),
     delete: (id: number) => db.delete('attachments', id),

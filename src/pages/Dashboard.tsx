@@ -1,13 +1,43 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db, checkSupabaseConnection } from '@/lib/supabase';
 import SetupGuide from '@/components/supabase/SetupGuide';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowUpRight, BarChart3, Clock, DollarSign, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/utils/formatters';
+import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-  const [isSupabaseConnected, setIsSupabaseConnected] = React.useState<boolean | null>(null);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
   
-  React.useEffect(() => {
+  const { data: clients } = useQuery({
+    queryKey: ['dashboard-clients'],
+    queryFn: () => db.clients.getAll(),
+    enabled: isSupabaseConnected === true,
+  });
+
+  const { data: payments } = useQuery({
+    queryKey: ['dashboard-payments'],
+    queryFn: () => db.payments.getAll(),
+    enabled: isSupabaseConnected === true,
+  });
+
+  const { data: projects } = useQuery({
+    queryKey: ['dashboard-projects'],
+    queryFn: () => db.projects.getAll(),
+    enabled: isSupabaseConnected === true,
+  });
+
+  const { data: services } = useQuery({
+    queryKey: ['dashboard-services'],
+    queryFn: () => db.services.getAll(),
+    enabled: isSupabaseConnected === true,
+  });
+
+  useEffect(() => {
     const checkConnection = async () => {
       try {
         const isConnected = await checkSupabaseConnection();
@@ -21,6 +51,15 @@ const Dashboard = () => {
     checkConnection();
   }, []);
 
+  // Cálculos para estatísticas do dashboard
+  const totalClients = clients?.length || 0;
+  const totalRevenue = payments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
+  const totalProjects = projects?.length || 0;
+  const activeServices = services?.filter(service => service.status === 'active').length || 0;
+  
+  // Projetos recentes
+  const recentProjects = projects?.slice(0, 3) || [];
+
   return (
     <div className="space-y-8">
       <div>
@@ -32,8 +71,127 @@ const Dashboard = () => {
         <SetupGuide />
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Cards do dashboard */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Clientes</p>
+                <h3 className="text-2xl font-bold mt-1">{totalClients}</h3>
+              </div>
+              <div className="p-2 bg-blue-50 rounded-full">
+                <Users className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-blue-500" asChild>
+                <Link to="/clients">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Faturamento</p>
+                <h3 className="text-2xl font-bold mt-1">{formatCurrency(totalRevenue)}</h3>
+              </div>
+              <div className="p-2 bg-green-50 rounded-full">
+                <DollarSign className="h-5 w-5 text-green-500" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-green-500" asChild>
+                <Link to="/finances">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Projetos</p>
+                <h3 className="text-2xl font-bold mt-1">{totalProjects}</h3>
+              </div>
+              <div className="p-2 bg-purple-50 rounded-full">
+                <BarChart3 className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-purple-500" asChild>
+                <Link to="/projects">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Serviços Ativos</p>
+                <h3 className="text-2xl font-bold mt-1">{activeServices}</h3>
+              </div>
+              <div className="p-2 bg-yellow-50 rounded-full">
+                <Clock className="h-5 w-5 text-yellow-500" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-yellow-500" asChild>
+                <Link to="/services">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="col-span-1 lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Projetos Recentes</CardTitle>
+            <CardDescription>Últimos projetos adicionados ao sistema</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recentProjects.length > 0 ? (
+              <div className="space-y-4">
+                {recentProjects.map((project) => (
+                  <div key={project.id} className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">{project.title}</h4>
+                      <p className="text-sm text-muted-foreground">Cliente: {project.client_name}</p>
+                    </div>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/projects/${project.id}`}>Detalhes</Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nenhum projeto encontrado</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Clientes Ativos</CardTitle>
+            <CardDescription>Total de clientes ativos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center h-40">
+              <h3 className="text-5xl font-bold text-primary">{totalClients}</h3>
+              <p className="text-sm text-muted-foreground mt-2">Total de clientes cadastrados</p>
+              <Button className="mt-4" asChild>
+                <Link to="/clients">Gerenciar Clientes</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

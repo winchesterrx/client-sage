@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
+import Footer from './Footer';
 import { initializeDatabase } from '@/services/api';
 import { toast } from 'sonner';
 
@@ -48,29 +49,32 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 ml-64">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-              <p className="mt-4 text-gray-600">Inicializando aplicação...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="container mx-auto py-8 px-6 max-w-7xl animate-fade-in">
-            {!isInitialized && (
-              <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
-                <p className="text-blue-700">
-                  Aplicação em modo offline. Os dados serão salvos apenas no seu navegador.
-                </p>
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 ml-64 flex flex-col">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-screen">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                <p className="mt-4 text-gray-600">Inicializando aplicação...</p>
               </div>
-            )}
-            {children}
-          </div>
-        )}
-      </main>
+            </div>
+          ) : (
+            <div className="container mx-auto py-8 px-6 max-w-7xl flex-1 animate-fade-in">
+              {!isInitialized && (
+                <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
+                  <p className="text-blue-700">
+                    Aplicação em modo offline. Os dados serão salvos apenas no seu navegador.
+                  </p>
+                </div>
+              )}
+              {children}
+            </div>
+          )}
+          <Footer />
+        </main>
+      </div>
     </div>
   );
 };

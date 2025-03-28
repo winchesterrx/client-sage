@@ -127,3 +127,38 @@
   transform: translateY(20px);
   transition: opacity 300ms, transform 300ms;
 }
+
+/* Mobile responsiveness utilities */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Fix for mobile padding */
+.mobile-pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* For mobile navigation with bottom safe area */
+.bottom-nav-container {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Better button hit targets on mobile */
+@media (max-width: 640px) {
+  button, 
+  .button {
+    min-height: 2.5rem;
+  }
+  
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

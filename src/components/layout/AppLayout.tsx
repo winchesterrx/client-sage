@@ -1,9 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
+import MobileSidebar from './MobileSidebar';
 import Footer from './Footer';
 import { initializeDatabase } from '@/services/api';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,6 +14,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Initialize database with sample data
@@ -51,8 +54,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 ml-64 flex flex-col">
+        {isMobile ? <MobileSidebar /> : <Sidebar />}
+        <main className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'} flex flex-col`}>
           {isLoading ? (
             <div className="flex items-center justify-center h-screen">
               <div className="text-center">
@@ -61,7 +64,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               </div>
             </div>
           ) : (
-            <div className="container mx-auto py-8 px-6 max-w-7xl flex-1 animate-fade-in">
+            <div className="container mx-auto py-8 px-4 sm:px-6 max-w-7xl flex-1 animate-fade-in">
               {!isInitialized && (
                 <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
                   <p className="text-blue-700">

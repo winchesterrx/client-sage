@@ -5,23 +5,26 @@ import { Github, Mail, Phone, Shield, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Footer = () => {
+  const isMobile = useIsMobile();
+  
   const openWhatsApp = () => {
     window.open('https://wa.me/5517997799982', '_blank');
   };
 
   return (
-    <footer className="mt-auto py-6 px-6 bg-white border-t">
+    <footer className="mt-auto py-6 px-4 sm:px-6 bg-white border-t">
       <div className="container mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'flex-row justify-between items-center space-y-0'}`}>
           <div className="flex items-center space-x-2">
             <p className="text-sm text-muted-foreground">
               © 2025 Desenvolvido por Gabriel Silva
             </p>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'items-center space-x-3'}`}>
             <Button 
               variant="outline" 
               size="sm" 
@@ -34,7 +37,7 @@ const Footer = () => {
             
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className={isMobile ? "w-full justify-start" : ""}>
                   <Shield className="h-4 w-4 mr-2" />
                   Termos de Uso
                 </Button>
@@ -73,7 +76,7 @@ const Footer = () => {
             
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className={isMobile ? "w-full justify-start" : ""}>
                   <Shield className="h-4 w-4 mr-2" />
                   Privacidade
                 </Button>
@@ -114,7 +117,7 @@ const Footer = () => {
             <a href="mailto:contato@gabrielsilva.dev" className="text-muted-foreground hover:text-foreground">
               <Mail className="h-4 w-4" />
             </a>
-            <a href="https://github.com/gabrielsilva" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
+            <a href="https://github.com/winchesterrx" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
               <Github className="h-4 w-4" />
             </a>
             <a href="tel:+5517997799982" className="text-muted-foreground hover:text-foreground">

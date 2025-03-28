@@ -22,7 +22,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     label: 'Dashboard',
-    href: '/',
+    href: '/dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
@@ -67,7 +67,7 @@ const Sidebar = () => {
         </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.href}

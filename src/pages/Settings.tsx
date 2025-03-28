@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,7 +105,7 @@ const Settings = () => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Status do Banco de Dados</CardTitle>
-                <Badge variant={supabaseStatus === 'connected' ? 'success' : 'destructive'}>
+                <Badge variant={supabaseStatus === 'connected' ? 'secondary' : 'destructive'}>
                   {supabaseStatus === 'connected' ? 'Conectado' : 'Desconectado'}
                 </Badge>
               </div>

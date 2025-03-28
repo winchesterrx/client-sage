@@ -1,130 +1,67 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import Index from './pages/Index';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
+import Dashboard from './pages/Dashboard';
+import Clients from './pages/Clients';
+import ClientDetail from './pages/ClientDetail';
+import Services from './pages/Services';
+import ServiceDetail from './pages/ServiceDetail';
+import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
+import Finances from './pages/Finances';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import AppLayout from './components/layout/AppLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from '@/components/ui/toaster';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AppLayout from "@/components/layout/AppLayout";
-import FloatingActionButton from "@/components/ui/floating-action-button";
-import { MessageCircle } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+// Import the UserManagement component
+import UserManagement from './pages/admin/UserManagement';
 
-// Pages
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Clients from "./pages/clients/Clients";
-import ClientDetail from "./pages/clients/ClientDetail";
-import Services from "./pages/services/Services";
-import ServiceDetail from "./pages/services/ServiceDetail";
-import Projects from "./pages/projects/Projects";
-import ProjectDetail from "./pages/projects/ProjectDetail";
-import Finances from "./pages/finances/Finances";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-
-// Auth Pages
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
-
-const queryClient = new QueryClient();
-
-const AppRoutes = () => {
-  const isMobile = useIsMobile();
-  
-  const openWhatsApp = () => {
-    window.open('https://wa.me/5517997799982', '_blank');
-  };
-
+function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        
-        {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <AppLayout><Dashboard /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/clients" element={
-          <ProtectedRoute>
-            <AppLayout><Clients /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/clients/:id" element={
-          <ProtectedRoute>
-            <AppLayout><ClientDetail /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/services" element={
-          <ProtectedRoute>
-            <AppLayout><Services /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/services/:id" element={
-          <ProtectedRoute>
-            <AppLayout><ServiceDetail /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/projects" element={
-          <ProtectedRoute>
-            <AppLayout><Projects /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/projects/:id" element={
-          <ProtectedRoute>
-            <AppLayout><ProjectDetail /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/finances" element={
-          <ProtectedRoute>
-            <AppLayout><Finances /></AppLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <AppLayout><Settings /></AppLayout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <FloatingActionButton 
-        variant="whatsapp" 
-        icon={<MessageCircle className="h-6 w-6" />} 
-        onClick={openWhatsApp} 
-        position={isMobile ? "bottom-right" : "bottom-right"}
-        className={isMobile ? "mb-4 mr-4" : ""}
-        aria-label="Contato via WhatsApp"
-      />
-    </>
+    <div className="App">
+      <Router>
+        <AuthProvider>
+          
+          <Routes>
+            <Route path="/" element={<Index />} />
+            
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientDetail />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/services/:id" element={<ServiceDetail />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/finances" element={<Finances />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin/users" element={<UserManagement />} /> {/* New route */}
+              </Route>
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+        </AuthProvider>
+      </Router>
+      <Toaster />
+    </div>
   );
-};
-
-const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+}
 
 export default App;

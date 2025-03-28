@@ -1,109 +1,146 @@
-
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
-  Users, 
-  LayoutDashboard, 
-  FileText, 
-  Briefcase, 
-  CreditCard, 
-  Settings, 
-  LogOut,
-  CircleUser
-} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { Home, Users, Settings, BarChart3, ListChecks, DollarSign, Package } from 'lucide-react';
 
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-};
+interface SidebarProps {
+  isOpen: boolean;
+}
 
-const navItems: NavItem[] = [
-  {
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: <LayoutDashboard className="h-5 w-5" />,
-  },
-  {
-    label: 'Clientes',
-    href: '/clients',
-    icon: <Users className="h-5 w-5" />,
-  },
-  {
-    label: 'Serviços',
-    href: '/services',
-    icon: <FileText className="h-5 w-5" />,
-  },
-  {
-    label: 'Projetos',
-    href: '/projects',
-    icon: <Briefcase className="h-5 w-5" />,
-  },
-  {
-    label: 'Finanças',
-    href: '/finances',
-    icon: <CreditCard className="h-5 w-5" />,
-  },
-  {
-    label: 'Configurações',
-    href: '/settings',
-    icon: <Settings className="h-5 w-5" />,
-  },
-];
-
-const Sidebar = () => {
-  const { logout, user } = useAuth();
+const Sidebar = ({ isOpen }: SidebarProps) => {
+  const { user } = useAuth();
+  const { pathname } = useLocation();
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col fixed">
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-2">
-            <CircleUser className="h-6 w-6 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-semibold text-gray-900">Client Manager</h1>
-            <p className="text-xs text-gray-500">Gerenciador de clientes</p>
-          </div>
+    <div
+      className={cn(
+        "fixed inset-y-0 left-0 z-50 w-64 bg-gray-50 border-r border-gray-200 transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        "lg:translate-x-0 lg:sticky top-0 h-screen"
+      )}
+    >
+      <div className="flex items-center justify-center h-16 border-b border-gray-200">
+        <Link to="/" className="text-2xl font-bold text-blue-600">
+          Clientes<span className="text-gray-600">OWL</span>
+        </Link>
+      </div>
+
+      <div className="px-4 py-6">
+        {/* Main Navigation */}
+        <div className="space-y-1">
+          <Link
+            to="/dashboard"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/dashboard"
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <Home className="mr-3 h-5 w-5" />
+            Dashboard
+          </Link>
+
+          <Link
+            to="/clients"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/clients" || pathname.startsWith("/clients/")
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <Users className="mr-3 h-5 w-5" />
+            Clientes
+          </Link>
+
+          <Link
+            to="/services"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/services" || pathname.startsWith("/services/")
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <Package className="mr-3 h-5 w-5" />
+            Serviços
+          </Link>
+
+          <Link
+            to="/projects"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/projects" || pathname.startsWith("/projects/")
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <ListChecks className="mr-3 h-5 w-5" />
+            Projetos
+          </Link>
+
+          <Link
+            to="/finances"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/finances"
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <DollarSign className="mr-3 h-5 w-5" />
+            Financeiro
+          </Link>
+
+          <Link
+            to="/settings"
+            className={cn(
+              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+              pathname === "/settings"
+                ? "bg-primary-foreground text-primary"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <Settings className="mr-3 h-5 w-5" />
+            Configurações
+          </Link>
+          
+          {/* Show user management link only for master users */}
+          {user && user.role === 'master' && (
+            <Link
+              to="/admin/users"
+              className={cn(
+                "flex items-center py-2 px-4 text-sm font-medium rounded-md",
+                pathname === "/admin/users" 
+                  ? "bg-primary-foreground text-primary"
+                  : "text-gray-600 hover:bg-gray-100"
+              )}
+            >
+              <Users className="mr-3 h-5 w-5" />
+              Usuários
+            </Link>
+          )}
         </div>
       </div>
-      
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group hover:bg-gray-100",
-                isActive ? "bg-blue-50 text-blue-600" : "text-gray-700"
-              )
-            }
-          >
-            <span className="transition-colors duration-200">{item.icon}</span>
-            <span className="font-medium">{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
-      
-      <div className="p-4 border-t">
-        {user && (
-          <div className="mb-4 px-3 py-2 rounded-md bg-gray-50">
+
+      <div className="absolute bottom-0 left-0 w-full border-t border-gray-200 p-4">
+        {user ? (
+          <div className="space-y-2">
             <div className="text-sm font-medium text-gray-900">{user.name}</div>
             <div className="text-xs text-gray-500">{user.email}</div>
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => {}}>
+              Sair
+            </Button>
           </div>
+        ) : (
+          <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+            Entrar
+          </Link>
         )}
-        <button 
-          onClick={logout}
-          className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 transition-all duration-200"
-        >
-          <LogOut className="h-5 w-5" />
-          <span className="font-medium">Sair</span>
-        </button>
       </div>
-    </aside>
+    </div>
   );
 };
 

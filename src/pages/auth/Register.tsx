@@ -36,6 +36,7 @@ const Register = () => {
   const { register, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [registrationSubmitted, setRegistrationSubmitted] = useState(false);
   
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -59,8 +60,37 @@ const Register = () => {
       role: userData.role
     };
     
-    await register(userToRegister);
+    const result = await register(userToRegister);
+    if (result) {
+      setRegistrationSubmitted(true);
+    }
   };
+
+  if (registrationSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <div className="flex justify-center mb-4">
+              <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg">
+                <UserCheck className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Registro Enviado!</CardTitle>
+            <CardDescription className="text-center">
+              Sua solicitação de registro foi enviada com sucesso e está aguardando aprovação.
+              Um administrador irá revisar e aprovar seu acesso em breve.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <Button asChild>
+              <Link to="/login">Voltar para Login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

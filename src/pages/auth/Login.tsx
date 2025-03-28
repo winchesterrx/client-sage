@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,21 +14,20 @@ import {
   FormLabel, 
   FormMessage 
 } from '@/components/ui/form';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Github, LogIn } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff, User } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const loginSchema = z.object({
   email: z.string().email('Digite um email válido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
 
-type LoginValues = z.infer<typeof loginSchema>;
-
 const Login = () => {
   const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   
-  const form = useForm<LoginValues>({
+  const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -37,8 +35,12 @@ const Login = () => {
     },
   });
 
-  const onSubmit = async (values: LoginValues) => {
-    await login(values.email, values.password);
+  const onSubmit = async (values: z.infer<typeof loginSchema>) => {
+    const success = await login(values.email, values.password);
+    if (!success) {
+      // The error message will come from the auth context
+      console.log('Login failed');
+    }
   };
 
   return (
@@ -47,7 +49,7 @@ const Login = () => {
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-2 rounded-lg">
-              <LogIn className="h-6 w-6 text-white" />
+              <User className="h-6 w-6 text-white" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
@@ -68,7 +70,6 @@ const Login = () => {
                       <Input
                         placeholder="seu@email.com"
                         type="email"
-                        autoComplete="email"
                         disabled={isLoading}
                         {...field}
                       />
@@ -88,7 +89,6 @@ const Login = () => {
                         <Input
                           placeholder="******"
                           type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
                           disabled={isLoading}
                           {...field}
                         />
@@ -111,9 +111,21 @@ const Login = () => {
                   </FormItem>
                 )}
               />
-              <div className="text-sm text-right">
-                <Link to="/forgot-password" className="text-blue-600 hover:text-blue-500">
-                  Esqueceu sua senha?
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Checkbox id="remember" />
+                  <label
+                    htmlFor="remember"
+                    className="ml-2 block text-sm text-gray-900"
+                  >
+                    Lembrar-me
+                  </label>
+                </div>
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Esqueceu a senha?
                 </Link>
               </div>
               <Button
@@ -127,33 +139,23 @@ const Login = () => {
                     <span>Entrando...</span>
                   </div>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <LogIn className="h-4 w-4" />
-                    <span>Entrar</span>
-                  </span>
+                  <span>Entrar</span>
                 )}
               </Button>
             </form>
           </Form>
+          <div className="mt-4 text-center text-sm">
+            <p>
+              Não tem uma conta?{" "}
+              <Link to="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                Registre-se
+              </Link>
+            </p>
+            <p className="mt-2 text-xs text-gray-500">
+              Para acessar como Master: master@sistema.com / 1930
+            </p>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-sm text-center">
-            Não tem uma conta?{" "}
-            <Link to="/register" className="text-blue-600 hover:text-blue-500 font-medium">
-              Registre-se
-            </Link>
-          </div>
-          <div className="flex items-center justify-center">
-            <a
-              href="https://github.com/winchesterrx"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <Github className="h-5 w-5" />
-            </a>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );

@@ -77,7 +77,8 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  role: 'admin' | 'manager' | 'user';
+  role: 'admin' | 'manager' | 'user' | 'master';
+  invitation_status?: 'pending' | 'accepted' | 'rejected';
   reset_token?: string;
   reset_token_expires?: string;
   last_login?: string;

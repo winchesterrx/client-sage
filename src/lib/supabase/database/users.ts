@@ -33,5 +33,36 @@ export const usersDb = {
   // Delete a user
   delete: async (id: number): Promise<void> => {
     return dbGeneric.delete('users', id);
+  },
+  
+  // Get pending invitations
+  getPendingInvitations: async (): Promise<User[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('invitation_status', 'pending');
+        
+      if (error) {
+        throw error;
+      }
+      
+      return data as User[];
+    } catch (error) {
+      console.error('Error fetching pending invitations:', error);
+      return [];
+    }
+  },
+  
+  // Accept or reject an invitation
+  updateInvitationStatus: async (
+    id: number, 
+    status: 'accepted' | 'rejected', 
+    active: boolean
+  ): Promise<User> => {
+    return dbGeneric.update<User>('users', id, { 
+      invitation_status: status,
+      active 
+    });
   }
 };

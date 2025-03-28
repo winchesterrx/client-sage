@@ -17,14 +17,13 @@ export const auth = {
         return { success: false, message: 'Email já está em uso.' };
       }
       
-      // Insert the new user
+      // Insert the new user with pending invitation status
       const { data, error } = await supabase
         .from('users')
         .insert({
           ...user,
-          // In a real app, you would hash the password here
-          // For now, we'll store it as is (not recommended for production)
-          active: true
+          invitation_status: 'pending',
+          active: false
         })
         .select();
       
@@ -34,7 +33,7 @@ export const auth = {
       
       return { 
         success: true, 
-        message: 'Usuário registrado com sucesso!', 
+        message: 'Usuário registrado com sucesso! Aguardando aprovação do administrador.', 
         data: data[0] as User 
       };
     } catch (error: any) {
@@ -54,13 +53,20 @@ export const auth = {
         .select('*')
         .eq('email', email)
         .eq('password', password) // In a real app, you would compare hashed passwords
-        .eq('active', true)
         .single();
       
       if (error || !data) {
         return { 
           success: false, 
           message: 'Email ou senha inválidos.' 
+        };
+      }
+      
+      // Check if user is active and invitation is accepted
+      if (!data.active || data.invitation_status !== 'accepted') {
+        return {
+          success: false,
+          message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
         };
       }
       

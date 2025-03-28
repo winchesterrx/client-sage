@@ -50,7 +50,16 @@ const Register = () => {
 
   const onSubmit = async (values: RegisterValues) => {
     const { confirmPassword, ...userData } = values;
-    await register(userData);
+    
+    // Ensure that all required properties are passed - they are no longer optional
+    const userToRegister = {
+      name: userData.name,
+      email: userData.email,
+      password: userData.password,
+      role: userData.role
+    };
+    
+    await register(userToRegister);
   };
 
   return (

@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isAuthenticated: boolean; // Add this property
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (user: Omit<User, 'id' | 'created_at' | 'updated_at' | 'reset_token' | 'reset_token_expires' | 'last_login' | 'active'>) => Promise<boolean>;
@@ -184,6 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isLoading,
+    isAuthenticated: !!user, // Add this property to compute authentication status
     login,
     logout,
     register,

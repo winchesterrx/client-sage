@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import FloatingActionButton from "@/components/ui/floating-action-button";
-import { WhatsappIcon } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 // Pages
 import Index from "./pages/Index";
@@ -49,7 +49,7 @@ const App = () => {
           </Routes>
           <FloatingActionButton 
             variant="whatsapp" 
-            icon={<WhatsappIcon className="h-6 w-6" />} 
+            icon={<MessageCircle className="h-6 w-6" />} 
             onClick={openWhatsApp} 
             aria-label="Contato via WhatsApp"
           />

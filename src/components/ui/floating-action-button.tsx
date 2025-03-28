@@ -2,7 +2,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { WhatsappIcon } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 interface FloatingActionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode;
@@ -12,7 +12,7 @@ interface FloatingActionButtonProps extends React.ButtonHTMLAttributes<HTMLButto
 }
 
 const FloatingActionButton = ({
-  icon = <WhatsappIcon />,
+  icon = <MessageCircle />,
   variant = 'default',
   position = 'bottom-right',
   onClick,

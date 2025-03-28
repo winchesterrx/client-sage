@@ -162,8 +162,10 @@ const Dashboard = () => {
                 {recentProjects.map((project) => (
                   <div key={project.id} className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium">{project.title}</h4>
-                      <p className="text-sm text-muted-foreground">Cliente: {project.client_name}</p>
+                      <h4 className="font-medium">{project.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Cliente: {clients?.find(c => c.id === project.client_id)?.name || 'N/A'}
+                      </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/projects/${project.id}`}>Detalhes</Link>

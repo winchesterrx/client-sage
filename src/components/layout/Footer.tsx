@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Github, Mail, Phone, Shield, WhatsappIcon } from 'lucide-react';
+import { Github, Mail, Phone, Shield, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -28,7 +28,7 @@ const Footer = () => {
               className="text-green-600 border-green-600 hover:bg-green-50"
               onClick={openWhatsApp}
             >
-              <WhatsappIcon className="h-4 w-4 mr-2" />
+              <MessageCircle className="h-4 w-4 mr-2" />
               Contato
             </Button>
             

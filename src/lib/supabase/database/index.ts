@@ -5,6 +5,7 @@ import { paymentsDb } from './payments';
 import { projectsDb } from './projects';
 import { tasksDb } from './tasks';
 import { attachmentsDb } from './attachments';
+import { usersDb } from './users';
 
 // Export all database operations as a single object
 export const db = {
@@ -13,5 +14,6 @@ export const db = {
   payments: paymentsDb,
   projects: projectsDb,
   tasks: tasksDb,
-  attachments: attachmentsDb
+  attachments: attachmentsDb,
+  users: usersDb
 };

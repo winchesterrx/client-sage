@@ -78,6 +78,21 @@ CREATE TABLE attachments (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Users table (for authentication)
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'user')) DEFAULT 'user',
+  reset_token VARCHAR(255),
+  reset_token_expires TIMESTAMP WITH TIME ZONE,
+  last_login TIMESTAMP WITH TIME ZONE,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Add RLS (Row Level Security) policies
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE services ENABLE ROW LEVEL SECURITY;
@@ -85,6 +100,7 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow all operations for authenticated users
 CREATE POLICY "Enable all operations for authenticated users" ON clients
@@ -103,6 +119,9 @@ CREATE POLICY "Enable all operations for authenticated users" ON tasks
   FOR ALL USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Enable all operations for authenticated users" ON attachments
+  FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable all operations for authenticated users" ON users
   FOR ALL USING (auth.role() = 'authenticated');
 
 -- Create storage bucket for attachments
@@ -140,4 +159,8 @@ FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
 
 CREATE TRIGGER update_attachments_modified
 BEFORE UPDATE ON attachments
+FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+
+CREATE TRIGGER update_users_modified
+BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE PROCEDURE update_modified_column();

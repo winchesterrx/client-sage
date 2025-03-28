@@ -72,6 +72,20 @@ export interface Attachment {
   updated_at: string;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'manager' | 'user';
+  reset_token?: string;
+  reset_token_expires?: string;
+  last_login?: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Mock database SQL schema to help the user implement the backend
 export const databaseSchema = `
 -- Clients table

@@ -8,6 +8,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import FloatingActionButton from "@/components/ui/floating-action-button";
 import { MessageCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Pages
 import Index from "./pages/Index";
@@ -22,9 +24,15 @@ import Finances from "./pages/finances/Finances";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
+// Auth Pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+
 const queryClient = new QueryClient();
 
-const AppContent = () => {
+const AppRoutes = () => {
   const isMobile = useIsMobile();
   
   const openWhatsApp = () => {
@@ -35,15 +43,60 @@ const AppContent = () => {
     <>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-        <Route path="/clients" element={<AppLayout><Clients /></AppLayout>} />
-        <Route path="/clients/:id" element={<AppLayout><ClientDetail /></AppLayout>} />
-        <Route path="/services" element={<AppLayout><Services /></AppLayout>} />
-        <Route path="/services/:id" element={<AppLayout><ServiceDetail /></AppLayout>} />
-        <Route path="/projects" element={<AppLayout><Projects /></AppLayout>} />
-        <Route path="/projects/:id" element={<AppLayout><ProjectDetail /></AppLayout>} />
-        <Route path="/finances" element={<AppLayout><Finances /></AppLayout>} />
-        <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
+        
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <AppLayout><Dashboard /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/clients" element={
+          <ProtectedRoute>
+            <AppLayout><Clients /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/clients/:id" element={
+          <ProtectedRoute>
+            <AppLayout><ClientDetail /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/services" element={
+          <ProtectedRoute>
+            <AppLayout><Services /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/services/:id" element={
+          <ProtectedRoute>
+            <AppLayout><ServiceDetail /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects" element={
+          <ProtectedRoute>
+            <AppLayout><Projects /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects/:id" element={
+          <ProtectedRoute>
+            <AppLayout><ProjectDetail /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/finances" element={
+          <ProtectedRoute>
+            <AppLayout><Finances /></AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <AppLayout><Settings /></AppLayout>
+          </ProtectedRoute>
+        } />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
       <FloatingActionButton 
@@ -65,7 +118,9 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppContent />
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

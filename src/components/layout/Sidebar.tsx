@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Users, Settings, BarChart3, ListChecks, DollarSign, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   isOpen: boolean;

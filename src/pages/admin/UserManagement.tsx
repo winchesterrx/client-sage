@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/supabase';
@@ -41,7 +40,7 @@ const UserManagement = () => {
 
   // Mutation to update user status
   const updateUserMutation = useMutation({
-    mutationFn: async ({ userId, status, active }: { userId: number, status: string, active: boolean }) => {
+    mutationFn: async ({ userId, status, active }: { userId: number, status: 'accepted' | 'rejected', active: boolean }) => {
       return await db.users.update(userId, { 
         invitation_status: status,
         active

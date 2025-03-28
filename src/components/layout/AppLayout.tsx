@@ -6,9 +6,10 @@ import Footer from './Footer';
 import { initializeDatabase } from '@/services/api';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Outlet } from 'react-router-dom';
 
 interface AppLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
@@ -54,7 +55,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <div className="flex flex-1">
-        {isMobile ? <MobileSidebar /> : <Sidebar />}
+        {isMobile ? <MobileSidebar /> : <Sidebar isOpen={true} />}
         <main className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'} flex flex-col`}>
           {isLoading ? (
             <div className="flex items-center justify-center h-screen">
@@ -72,7 +73,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   </p>
                 </div>
               )}
-              {children}
+              <Outlet />
             </div>
           )}
           <Footer />

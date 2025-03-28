@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +15,7 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, UserCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const registerSchema = z.object({
@@ -52,7 +51,6 @@ const Register = () => {
   const onSubmit = async (values: RegisterValues) => {
     const { confirmPassword, ...userData } = values;
     
-    // Ensure that all required properties are passed - they are no longer optional
     const userToRegister = {
       name: userData.name,
       email: userData.email,

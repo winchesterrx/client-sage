@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
@@ -7,17 +8,17 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Dashboard from './pages/Dashboard';
-import Clients from './pages/Clients';
-import ClientDetail from './pages/ClientDetail';
-import Services from './pages/Services';
-import ServiceDetail from './pages/ServiceDetail';
-import Projects from './pages/Projects';
-import ProjectDetail from './pages/ProjectDetail';
-import Finances from './pages/Finances';
+import Clients from './pages/clients/Clients';
+import ClientDetail from './pages/clients/ClientDetail';
+import Services from './pages/services/Services';
+import ServiceDetail from './pages/services/ServiceDetail';
+import Projects from './pages/projects/Projects';
+import ProjectDetail from './pages/projects/ProjectDetail';
+import Finances from './pages/finances/Finances';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import AppLayout from './components/layout/AppLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
 
 // Import the UserManagement component

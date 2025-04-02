@@ -1,7 +1,7 @@
-
 import { supabase } from './client';
 import { User } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
+import { usersDb } from './database/users';
 
 export const auth = {
   // Register a new user
@@ -10,20 +10,17 @@ export const auth = {
       console.log('Registering user:', user);
       
       // Check if email already exists
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('users')  // Corrigido para 'users'
-        .select('*')
-        .eq('email', user.email);
+      const existingUser = await usersDb.getByEmail(user.email);
       
-      console.log('Existing users check:', existingUsers, checkError);
+      console.log('Existing user check:', existingUser);
       
-      if (existingUsers && existingUsers.length > 0) {
+      if (existingUser) {
         return { success: false, message: 'Email já está em uso.' };
       }
       
       // Insert the new user with pending invitation status
       const { data, error } = await supabase
-        .from('users')  // Corrigido para 'users'
+        .from('users')
         .insert({
           ...user,
           invitation_status: 'pending',
@@ -57,37 +54,24 @@ export const auth = {
     try {
       console.log('Attempting login with:', { email });
       
-      // First, check if the user exists, without checking the password
-      const { data: userCheck, error: userError } = await supabase
-        .from('users')  // Corrigido para 'users'
-        .select('*')
-        .eq('email', email)
-        .single();
+      // Get the user by email
+      const user = await usersDb.getByEmail(email);
       
-      console.log('User check result:', userCheck, userError);
+      console.log('User check result:', user);
       
-      if (userError || !userCheck) {
-        console.log('User not found:', userError);
+      if (!user) {
+        console.log('User not found');
         return { 
           success: false, 
           message: 'Email não encontrado no sistema.' 
         };
       }
       
-      console.log('User found:', userCheck);
+      console.log('User found:', user);
       
-      // Now check the password
-      const { data, error } = await supabase
-        .from('users')  // Corrigido para 'users'
-        .select('*')
-        .eq('email', email)
-        .eq('password', password)
-        .single();
-      
-      console.log('Password check result:', data, error);
-      
-      if (error || !data) {
-        console.log('Incorrect password:', error);
+      // Check the password
+      if (user.password !== password) {
+        console.log('Incorrect password');
         return { 
           success: false, 
           message: 'Senha incorreta. Por favor, tente novamente.' 
@@ -95,8 +79,8 @@ export const auth = {
       }
       
       // Check if user is active and invitation is accepted
-      if (!data.active || data.invitation_status !== 'accepted') {
-        console.log('Account inactive or pending:', { active: data.active, status: data.invitation_status });
+      if (!user.active || user.invitation_status !== 'accepted') {
+        console.log('Account inactive or pending:', { active: user.active, status: user.invitation_status });
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
@@ -107,17 +91,17 @@ export const auth = {
       
       // Update last login time
       await supabase
-        .from('users')  // Corrigido para 'users'
+        .from('users')
         .update({ last_login: new Date().toISOString() })
-        .eq('id', data.id);
+        .eq('id', user.id);
       
       // Store user info in localStorage
-      localStorage.setItem('user', JSON.stringify(data));
+      localStorage.setItem('user', JSON.stringify(user));
       
       return { 
         success: true, 
         message: 'Login realizado com sucesso!', 
-        user: data as User 
+        user: user
       };
     } catch (error: any) {
       console.error('Error during login:', error);
@@ -154,24 +138,30 @@ export const auth = {
   // Request password reset
   requestPasswordReset: async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
+      // Check if user exists
+      const user = await usersDb.getByEmail(email);
+      
+      if (!user || !user.active) {
+        return { success: false, message: 'Email não encontrado ou conta inativa.' };
+      }
+      
       // Generate a unique token and set expiration 24 hours from now
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
       
       // Update user with reset token
-      const { data, error } = await supabase
-        .from('users')  // Corrigido para 'users'
+      const { error } = await supabase
+        .from('users')
         .update({
           reset_token: token,
           reset_token_expires: expiresAt.toISOString()
         })
-        .eq('email', email)
-        .eq('active', true)
-        .select();
+        .eq('id', user.id);
       
-      if (error || !data || data.length === 0) {
-        return { success: false, message: 'Email não encontrado ou conta inativa.' };
+      if (error) {
+        console.error('Error setting reset token:', error);
+        throw error;
       }
       
       // In a real app, you would send an email with the reset link
@@ -201,7 +191,7 @@ export const auth = {
       const now = new Date().toISOString();
       
       const { data, error } = await supabase
-        .from('users')  // Corrigido para 'users'
+        .from('users')
         .select('*')
         .eq('reset_token', token)
         .gt('reset_token_expires', now)
@@ -216,9 +206,9 @@ export const auth = {
       
       // Update user's password and clear token
       const { error: updateError } = await supabase
-        .from('users')  // Corrigido para 'users'
+        .from('users')
         .update({
-          password: newPassword, // In a real app, you would hash the password
+          password: newPassword,
           reset_token: null,
           reset_token_expires: null
         })

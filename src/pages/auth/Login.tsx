@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -19,6 +19,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { checkSupabaseConnection } from '@/lib/supabase/client';
+import SetupGuide from '@/components/supabase/SetupGuide';
 
 const loginSchema = z.object({
   email: z.string().email('Digite um email válido'),
@@ -32,6 +34,7 @@ const Login = () => {
   const [loginError, setLoginError] = useState('');
   const [attemptedEmail, setAttemptedEmail] = useState('');
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
   
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -40,6 +43,22 @@ const Login = () => {
       password: '',
     },
   });
+
+  // Check Supabase connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection();
+      setIsSupabaseConnected(isConnected);
+      
+      if (!isConnected) {
+        setConnectionError(
+          'Não foi possível conectar ao Supabase. Verifique se suas credenciais estão configuradas corretamente.'
+        );
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setLoginError('');
@@ -78,6 +97,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      {isSupabaseConnected === false && <SetupGuide />}
+      
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
@@ -97,6 +118,10 @@ const Login = () => {
               {connectionError}
               <div className="mt-2 text-xs">
                 Dica: Verifique se suas credenciais do Supabase estão configuradas corretamente.
+                <pre className="mt-2 p-2 bg-gray-100 rounded overflow-x-auto text-xs">
+                  {`VITE_SUPABASE_URL=https://cfukngxrvrajjhiagktj.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
+                </pre>
               </div>
             </div>
           )}
@@ -108,7 +133,11 @@ const Login = () => {
                 <div className="mt-2">
                   <div className="font-bold">Email tentado: {attemptedEmail}</div>
                   <div className="text-xs mt-1">
-                    Dica: Verifique se sua tabela "users" no Supabase está configurada corretamente.
+                    <p>Dica: Verifique se sua tabela "users" no Supabase está configurada corretamente.</p>
+                    <p>Use o SQL abaixo para verificar se o usuário master existe:</p>
+                    <pre className="mt-2 p-2 bg-gray-100 rounded overflow-x-auto">
+                      {`SELECT * FROM users WHERE email = 'master@sistema.com';`}
+                    </pre>
                   </div>
                 </div>
               )}

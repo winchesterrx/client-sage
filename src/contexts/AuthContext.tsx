@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types/database';
 import { auth } from '@/lib/supabase/auth';
@@ -8,8 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  isAuthenticated: boolean; // Add this property
-  login: (email: string, password: string) => Promise<boolean>;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   register: (user: Omit<User, 'id' | 'created_at' | 'updated_at' | 'reset_token' | 'reset_token_expires' | 'last_login' | 'active'>) => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<boolean>;
@@ -24,7 +23,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check for existing user session on initial load
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -40,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
     try {
       const result = await auth.login(email, password);
@@ -52,14 +50,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "Bem-vindo de volta!",
         });
         navigate('/dashboard');
-        return true;
+        return { success: true, message: "Login bem-sucedido" };
       } else {
         toast({
           title: "Falha no login",
           description: result.message,
           variant: "destructive",
         });
-        return false;
+        return { success: false, message: result.message };
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -68,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Ocorreu um erro durante o login. Tente novamente.",
         variant: "destructive",
       });
-      return false;
+      return { success: false, message: "Ocorreu um erro durante o login. Tente novamente." };
     } finally {
       setIsLoading(false);
     }
@@ -185,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     isLoading,
-    isAuthenticated: !!user, // Add this property to compute authentication status
+    isAuthenticated: !!user,
     login,
     logout,
     register,

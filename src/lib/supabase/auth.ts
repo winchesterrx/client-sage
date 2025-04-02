@@ -48,27 +48,51 @@ export const auth = {
   // Login a user
   login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
     try {
+      console.log('Tentando login com:', { email });
+      
+      // Primeiro, vamos verificar se o usuário existe, sem verificar a senha
+      const { data: userCheck, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+      
+      if (userError || !userCheck) {
+        console.log('Usuário não encontrado:', userError);
+        return { 
+          success: false, 
+          message: 'Email não encontrado no sistema.' 
+        };
+      }
+      
+      console.log('Usuário encontrado:', userCheck);
+      
+      // Agora verificamos a senha
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
-        .eq('password', password) // In a real app, you would compare hashed passwords
+        .eq('password', password)
         .single();
       
       if (error || !data) {
+        console.log('Senha incorreta:', error);
         return { 
           success: false, 
-          message: 'Email ou senha inválidos.' 
+          message: 'Senha incorreta. Por favor, tente novamente.' 
         };
       }
       
       // Check if user is active and invitation is accepted
       if (!data.active || data.invitation_status !== 'accepted') {
+        console.log('Conta inativa ou pendente:', { active: data.active, status: data.invitation_status });
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
         };
       }
+      
+      console.log('Login bem-sucedido');
       
       // Update last login time
       await supabase
@@ -85,7 +109,7 @@ export const auth = {
         user: data as User 
       };
     } catch (error: any) {
-      console.error('Error logging in:', error);
+      console.error('Erro ao fazer login:', error);
       return { 
         success: false, 
         message: `Erro ao fazer login: ${error.message}` 

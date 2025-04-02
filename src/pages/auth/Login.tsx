@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +18,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email('Digite um email válido'),
@@ -26,6 +28,8 @@ const loginSchema = z.object({
 const Login = () => {
   const { login, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
+  const [loginError, setLoginError] = useState('');
   
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -36,10 +40,21 @@ const Login = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
-    const success = await login(values.email, values.password);
-    if (!success) {
-      // The error message will come from the auth context
-      console.log('Login failed');
+    setLoginError('');
+    console.log('Tentando fazer login com:', values.email);
+    
+    const result = await login(values.email, values.password);
+    
+    if (!result.success) {
+      setLoginError(result.message);
+      console.log('Falha no login:', result.message);
+      toast({
+        title: "Falha no login",
+        description: result.message,
+        variant: "destructive",
+      });
+    } else {
+      console.log('Login bem-sucedido');
     }
   };
 
@@ -58,6 +73,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loginError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+              {loginError}
+            </div>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

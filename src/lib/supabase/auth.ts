@@ -1,7 +1,23 @@
-import { supabase } from './client';
+import { supabase, detectUserTable } from './client';
 import { User } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
 import { usersDb } from './database/users';
+
+// As soon as this module is imported, detect the correct table
+(async function initializeUserTable() {
+  try {
+    console.log('Initializing auth service...');
+    const tableName = await detectUserTable();
+    if (tableName) {
+      console.log(`Setting user table to: ${tableName}`);
+      usersDb.setUserTable(tableName);
+    } else {
+      console.warn('Could not detect user table, using default');
+    }
+  } catch (e) {
+    console.error('Error initializing auth service:', e);
+  }
+})();
 
 export const auth = {
   // Register a new user
@@ -20,7 +36,7 @@ export const auth = {
       
       // Insert the new user with pending invitation status
       const { data, error } = await supabase
-        .from('users')
+        .from('usuarios')  // Use the correct table name
         .insert({
           ...user,
           invitation_status: 'pending',
@@ -54,6 +70,28 @@ export const auth = {
     try {
       console.log('Attempting login with:', { email });
       
+      // Run a raw SQL query to see all columns and data to help debugging
+      const { data: tableData, error: tableError } = await supabase
+        .rpc('debug_get_user_by_email', { user_email: email });
+      
+      if (!tableError) {
+        console.log('Raw user data from database:', tableData);
+      } else {
+        console.error('Error getting raw user data:', tableError);
+        
+        // Fallback to direct query
+        const { data: directData, error: directError } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('email', email);
+          
+        if (!directError) {
+          console.log('Direct query result:', directData);
+        } else {
+          console.error('Direct query error:', directError);
+        }
+      }
+      
       // Get the user by email
       const user = await usersDb.getByEmail(email);
       
@@ -70,7 +108,8 @@ export const auth = {
       console.log('User found:', user);
       
       // Check the password
-      if (user.password !== password) {
+      const correctPassword = user.password || user.senha; // Check both password and senha fields
+      if (correctPassword !== password) {
         console.log('Incorrect password');
         return { 
           success: false, 
@@ -79,8 +118,11 @@ export const auth = {
       }
       
       // Check if user is active and invitation is accepted
-      if (!user.active || user.invitation_status !== 'accepted') {
-        console.log('Account inactive or pending:', { active: user.active, status: user.invitation_status });
+      const isActive = user.active || user.ativo; // Check both active and ativo fields
+      const invitationStatus = user.invitation_status || user.status_do_convite; // Check both fields
+      
+      if (!isActive || (invitationStatus && invitationStatus !== 'accepted' && invitationStatus !== 'aceito')) {
+        console.log('Account inactive or pending:', { active: isActive, status: invitationStatus });
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
@@ -90,9 +132,10 @@ export const auth = {
       console.log('Login successful');
       
       // Update last login time
+      const lastLoginField = user.last_login !== undefined ? 'last_login' : 'ultimo_login';
       await supabase
-        .from('users')
-        .update({ last_login: new Date().toISOString() })
+        .from('usuarios')
+        .update({ [lastLoginField]: new Date().toISOString() })
         .eq('id', user.id);
       
       // Store user info in localStorage
@@ -229,5 +272,19 @@ export const auth = {
         message: `Erro ao redefinir senha: ${error.message}`
       };
     }
+  }
+};
+
+// Create a stored procedure for debugging
+export const createDebugProcedure = async () => {
+  try {
+    const { error } = await supabase.rpc('create_debug_procedure');
+    if (error) {
+      console.error('Error creating debug procedure:', error);
+    } else {
+      console.log('Debug procedure created successfully');
+    }
+  } catch (e) {
+    console.error('Exception creating debug procedure:', e);
   }
 };

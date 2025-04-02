@@ -30,6 +30,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const [loginError, setLoginError] = useState('');
+  const [attemptedEmail, setAttemptedEmail] = useState('');
   
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -41,20 +42,21 @@ const Login = () => {
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setLoginError('');
-    console.log('Tentando fazer login com:', values.email);
+    setAttemptedEmail(values.email);
+    console.log('Attempting login with:', values.email);
     
     const result = await login(values.email, values.password);
     
     if (!result.success) {
       setLoginError(result.message);
-      console.log('Falha no login:', result.message);
+      console.log('Login failed:', result.message);
       toast({
         title: "Falha no login",
         description: result.message,
         variant: "destructive",
       });
     } else {
-      console.log('Login bem-sucedido');
+      console.log('Login successful');
     }
   };
 
@@ -76,6 +78,11 @@ const Login = () => {
           {loginError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
               {loginError}
+              {loginError.includes('Email não encontrado') && attemptedEmail && (
+                <div className="mt-2 font-bold">
+                  Email tentado: {attemptedEmail}
+                </div>
+              )}
             </div>
           )}
           

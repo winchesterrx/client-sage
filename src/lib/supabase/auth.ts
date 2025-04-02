@@ -7,11 +7,15 @@ export const auth = {
   // Register a new user
   register: async (user: Omit<User, 'id' | 'created_at' | 'updated_at' | 'reset_token' | 'reset_token_expires' | 'last_login' | 'active'>): Promise<{ success: boolean; message: string; data?: User }> => {
     try {
+      console.log('Registering user:', user);
+      
       // Check if email already exists
-      const { data: existingUsers } = await supabase
-        .from('users')
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('user')  // Changed from 'users' to 'user'
         .select('*')
         .eq('email', user.email);
+      
+      console.log('Existing users check:', existingUsers, checkError);
       
       if (existingUsers && existingUsers.length > 0) {
         return { success: false, message: 'Email já está em uso.' };
@@ -19,7 +23,7 @@ export const auth = {
       
       // Insert the new user with pending invitation status
       const { data, error } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .insert({
           ...user,
           invitation_status: 'pending',
@@ -28,8 +32,11 @@ export const auth = {
         .select();
       
       if (error) {
+        console.error('Error inserting user:', error);
         throw error;
       }
+      
+      console.log('User registered successfully:', data);
       
       return { 
         success: true, 
@@ -48,35 +55,39 @@ export const auth = {
   // Login a user
   login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
     try {
-      console.log('Tentando login com:', { email });
+      console.log('Attempting login with:', { email });
       
-      // Primeiro, vamos verificar se o usuário existe, sem verificar a senha
+      // First, check if the user exists, without checking the password
       const { data: userCheck, error: userError } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .select('*')
         .eq('email', email)
         .single();
       
+      console.log('User check result:', userCheck, userError);
+      
       if (userError || !userCheck) {
-        console.log('Usuário não encontrado:', userError);
+        console.log('User not found:', userError);
         return { 
           success: false, 
           message: 'Email não encontrado no sistema.' 
         };
       }
       
-      console.log('Usuário encontrado:', userCheck);
+      console.log('User found:', userCheck);
       
-      // Agora verificamos a senha
+      // Now check the password
       const { data, error } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .select('*')
         .eq('email', email)
         .eq('password', password)
         .single();
       
+      console.log('Password check result:', data, error);
+      
       if (error || !data) {
-        console.log('Senha incorreta:', error);
+        console.log('Incorrect password:', error);
         return { 
           success: false, 
           message: 'Senha incorreta. Por favor, tente novamente.' 
@@ -85,18 +96,18 @@ export const auth = {
       
       // Check if user is active and invitation is accepted
       if (!data.active || data.invitation_status !== 'accepted') {
-        console.log('Conta inativa ou pendente:', { active: data.active, status: data.invitation_status });
+        console.log('Account inactive or pending:', { active: data.active, status: data.invitation_status });
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
         };
       }
       
-      console.log('Login bem-sucedido');
+      console.log('Login successful');
       
       // Update last login time
       await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .update({ last_login: new Date().toISOString() })
         .eq('id', data.id);
       
@@ -109,7 +120,7 @@ export const auth = {
         user: data as User 
       };
     } catch (error: any) {
-      console.error('Erro ao fazer login:', error);
+      console.error('Error during login:', error);
       return { 
         success: false, 
         message: `Erro ao fazer login: ${error.message}` 
@@ -150,7 +161,7 @@ export const auth = {
       
       // Update user with reset token
       const { data, error } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .update({
           reset_token: token,
           reset_token_expires: expiresAt.toISOString()
@@ -190,7 +201,7 @@ export const auth = {
       const now = new Date().toISOString();
       
       const { data, error } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .select('*')
         .eq('reset_token', token)
         .gt('reset_token_expires', now)
@@ -205,7 +216,7 @@ export const auth = {
       
       // Update user's password and clear token
       const { error: updateError } = await supabase
-        .from('users')
+        .from('user')  // Changed from 'users' to 'user'
         .update({
           password: newPassword, // In a real app, you would hash the password
           reset_token: null,

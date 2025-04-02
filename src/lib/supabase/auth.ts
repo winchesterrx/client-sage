@@ -11,7 +11,7 @@ export const auth = {
       
       // Check if email already exists
       const { data: existingUsers, error: checkError } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .select('*')
         .eq('email', user.email);
       
@@ -23,7 +23,7 @@ export const auth = {
       
       // Insert the new user with pending invitation status
       const { data, error } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .insert({
           ...user,
           invitation_status: 'pending',
@@ -59,7 +59,7 @@ export const auth = {
       
       // First, check if the user exists, without checking the password
       const { data: userCheck, error: userError } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .select('*')
         .eq('email', email)
         .single();
@@ -78,7 +78,7 @@ export const auth = {
       
       // Now check the password
       const { data, error } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .select('*')
         .eq('email', email)
         .eq('password', password)
@@ -107,7 +107,7 @@ export const auth = {
       
       // Update last login time
       await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .update({ last_login: new Date().toISOString() })
         .eq('id', data.id);
       
@@ -161,7 +161,7 @@ export const auth = {
       
       // Update user with reset token
       const { data, error } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .update({
           reset_token: token,
           reset_token_expires: expiresAt.toISOString()
@@ -201,7 +201,7 @@ export const auth = {
       const now = new Date().toISOString();
       
       const { data, error } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .select('*')
         .eq('reset_token', token)
         .gt('reset_token_expires', now)
@@ -216,7 +216,7 @@ export const auth = {
       
       // Update user's password and clear token
       const { error: updateError } = await supabase
-        .from('user')  // Changed from 'users' to 'user'
+        .from('users')  // Corrigido para 'users'
         .update({
           password: newPassword, // In a real app, you would hash the password
           reset_token: null,

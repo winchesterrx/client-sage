@@ -31,6 +31,7 @@ const Login = () => {
   const { toast } = useToast();
   const [loginError, setLoginError] = useState('');
   const [attemptedEmail, setAttemptedEmail] = useState('');
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -42,21 +43,36 @@ const Login = () => {
 
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setLoginError('');
+    setConnectionError(null);
     setAttemptedEmail(values.email);
     console.log('Attempting login with:', values.email);
     
-    const result = await login(values.email, values.password);
-    
-    if (!result.success) {
-      setLoginError(result.message);
-      console.log('Login failed:', result.message);
+    try {
+      const result = await login(values.email, values.password);
+      
+      if (!result.success) {
+        setLoginError(result.message);
+        console.log('Login failed:', result.message);
+        toast({
+          title: "Falha no login",
+          description: result.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('Login successful');
+        toast({
+          title: "Login bem-sucedido",
+          description: "Bem-vindo de volta!",
+        });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setConnectionError('Erro de conexão com o servidor. Verifique sua conexão com a internet ou se o servidor Supabase está disponível.');
       toast({
-        title: "Falha no login",
-        description: result.message,
+        title: "Erro de conexão",
+        description: "Não foi possível conectar ao servidor. Tente novamente mais tarde.",
         variant: "destructive",
       });
-    } else {
-      console.log('Login successful');
     }
   };
 
@@ -75,12 +91,25 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {connectionError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+              <div className="font-bold mb-1">Erro de Conexão:</div>
+              {connectionError}
+              <div className="mt-2 text-xs">
+                Dica: Verifique se suas credenciais do Supabase estão configuradas corretamente.
+              </div>
+            </div>
+          )}
+          
           {loginError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
               {loginError}
               {loginError.includes('Email não encontrado') && attemptedEmail && (
-                <div className="mt-2 font-bold">
-                  Email tentado: {attemptedEmail}
+                <div className="mt-2">
+                  <div className="font-bold">Email tentado: {attemptedEmail}</div>
+                  <div className="text-xs mt-1">
+                    Dica: Verifique se sua tabela "users" no Supabase está configurada corretamente.
+                  </div>
                 </div>
               )}
             </div>

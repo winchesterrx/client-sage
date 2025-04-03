@@ -22,6 +22,7 @@ export const projectsDb = {
         return [];
       }
       
+      console.log(`Found ${data?.length || 0} projects for client ${clientId}`);
       return data as Project[] || [];
     } catch (error) {
       console.error(`Error fetching projects for client ${clientId}:`, error);
@@ -31,8 +32,42 @@ export const projectsDb = {
   },
   
   getById: (id: number) => dbGeneric.get<Project>('projects', id).then(data => data[0] || null),
-  create: (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => 
-    dbGeneric.create<Project>('projects', project as Project),
-  update: (id: number, project: Partial<Project>) => dbGeneric.update<Project>('projects', id, project),
-  delete: (id: number) => dbGeneric.delete('projects', id),
+  
+  create: async (project: Omit<Project, 'id' | 'created_at' | 'updated_at'>): Promise<Project> => {
+    try {
+      console.log('Creating new project:', project);
+      const result = await dbGeneric.create<Project>('projects', project as Project);
+      toast.success('Projeto criado com sucesso');
+      return result;
+    } catch (error) {
+      console.error('Error creating project:', error);
+      toast.error('Erro ao criar projeto');
+      throw error;
+    }
+  },
+  
+  update: async (id: number, project: Partial<Project>): Promise<Project> => {
+    try {
+      console.log(`Updating project ${id}:`, project);
+      const result = await dbGeneric.update<Project>('projects', id, project);
+      toast.success('Projeto atualizado com sucesso');
+      return result;
+    } catch (error) {
+      console.error(`Error updating project ${id}:`, error);
+      toast.error('Erro ao atualizar projeto');
+      throw error;
+    }
+  },
+  
+  delete: async (id: number): Promise<void> => {
+    try {
+      console.log(`Deleting project ${id}`);
+      await dbGeneric.delete('projects', id);
+      toast.success('Projeto excluído com sucesso');
+    } catch (error) {
+      console.error(`Error deleting project ${id}:`, error);
+      toast.error('Erro ao excluir projeto');
+      throw error;
+    }
+  }
 };

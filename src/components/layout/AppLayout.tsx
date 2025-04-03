@@ -7,6 +7,7 @@ import { initializeDatabase } from '@/services/api';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Outlet } from 'react-router-dom';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
 interface AppLayoutProps {
   children?: React.ReactNode;
@@ -22,14 +23,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     const initialize = async () => {
       try {
         setIsLoading(true);
-        console.log("Starting database initialization...");
         const success = await initializeDatabase();
         
         if (success) {
-          console.log("Database successfully initialized");
           toast.success("Conectado ao banco de dados com sucesso!");
         } else {
-          console.warn("Using local storage fallback");
           toast.info("Usando armazenamento local para salvar os dados.", {
             description: "Os dados serão salvos apenas no seu navegador.",
             duration: 5000
@@ -73,7 +71,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   </p>
                 </div>
               )}
-              <Outlet />
+              <ErrorBoundary>
+                <Outlet />
+              </ErrorBoundary>
             </div>
           )}
           <Footer />

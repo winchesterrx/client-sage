@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db, checkSupabaseConnection } from '@/lib/supabase';
@@ -7,36 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowUpRight, BarChart3, Clock, DollarSign, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/utils/formatters';
-import { Separator } from '@/components/ui/separator';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
-  const { data: clients } = useQuery({
-    queryKey: ['dashboard-clients'],
-    queryFn: () => db.clients.getAll(),
-    enabled: isSupabaseConnected === true,
-  });
-
-  const { data: payments } = useQuery({
-    queryKey: ['dashboard-payments'],
-    queryFn: () => db.payments.getAll(),
-    enabled: isSupabaseConnected === true,
-  });
-
-  const { data: projects } = useQuery({
-    queryKey: ['dashboard-projects'],
-    queryFn: () => db.projects.getAll(),
-    enabled: isSupabaseConnected === true,
-  });
-
-  const { data: services } = useQuery({
-    queryKey: ['dashboard-services'],
-    queryFn: () => db.services.getAll(),
-    enabled: isSupabaseConnected === true,
-  });
-
   useEffect(() => {
     const checkConnection = async () => {
       try {
@@ -51,6 +26,51 @@ const Dashboard = () => {
     checkConnection();
   }, []);
 
+  // Use TanStack Query with error handling
+  const { data: clients, isError: isClientsError } = useQuery({
+    queryKey: ['dashboard-clients'],
+    queryFn: () => db.clients.getAll(),
+    enabled: isSupabaseConnected === true,
+    retry: 1,
+    onError: (err: any) => {
+      console.error('Error loading clients:', err);
+      setError('Erro ao carregar dados de clientes.');
+    }
+  });
+
+  const { data: payments, isError: isPaymentsError } = useQuery({
+    queryKey: ['dashboard-payments'],
+    queryFn: () => db.payments.getAll(),
+    enabled: isSupabaseConnected === true,
+    retry: 1,
+    onError: (err: any) => {
+      console.error('Error loading payments:', err);
+    }
+  });
+
+  const { data: projects, isError: isProjectsError } = useQuery({
+    queryKey: ['dashboard-projects'],
+    queryFn: () => db.projects.getAll(),
+    enabled: isSupabaseConnected === true,
+    retry: 1,
+    onError: (err: any) => {
+      console.error('Error loading projects:', err);
+    }
+  });
+
+  const { data: services, isError: isServicesError } = useQuery({
+    queryKey: ['dashboard-services'],
+    queryFn: () => db.services.getAll(),
+    enabled: isSupabaseConnected === true,
+    retry: 1,
+    onError: (err: any) => {
+      console.error('Error loading services:', err);
+    }
+  });
+
+  // Check if there are any data loading errors
+  const hasErrors = isClientsError || isPaymentsError || isProjectsError || isServicesError;
+
   // Cálculos para estatísticas do dashboard
   const totalClients = clients?.length || 0;
   const totalRevenue = payments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
@@ -59,6 +79,18 @@ const Dashboard = () => {
   
   // Projetos recentes
   const recentProjects = projects?.slice(0, 3) || [];
+
+  if (error) {
+    return (
+      <div className="p-6 bg-red-50 rounded-lg border border-red-200 my-4">
+        <h2 className="text-lg font-medium text-red-800">Erro ao carregar dados</h2>
+        <p className="text-red-600 mt-1">{error}</p>
+        <Button className="mt-4" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -69,6 +101,12 @@ const Dashboard = () => {
       
       {isSupabaseConnected === false && (
         <SetupGuide />
+      )}
+      
+      {hasErrors && (
+        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+          <p className="text-amber-700">Ocorreram alguns erros ao carregar os dados. Algumas informações podem estar incompletas.</p>
+        </div>
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,3 +1,4 @@
+
 import { supabase, detectUserTable } from './client';
 import { User } from '@/types/database';
 import { toast } from '@/hooks/use-toast';
@@ -23,12 +24,8 @@ export const auth = {
   // Register a new user
   register: async (user: Omit<User, 'id' | 'created_at' | 'updated_at' | 'reset_token' | 'reset_token_expires' | 'last_login' | 'active'>): Promise<{ success: boolean; message: string; data?: User }> => {
     try {
-      console.log('Registering user:', user);
-      
       // Check if email already exists
       const existingUser = await usersDb.getByEmail(user.email);
-      
-      console.log('Existing user check:', existingUser);
       
       if (existingUser) {
         return { success: false, message: 'Email já está em uso.' };
@@ -49,8 +46,6 @@ export const auth = {
         throw error;
       }
       
-      console.log('User registered successfully:', data);
-      
       return { 
         success: true, 
         message: 'Usuário registrado com sucesso! Aguardando aprovação do administrador.', 
@@ -68,73 +63,40 @@ export const auth = {
   // Login a user
   login: async (email: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
     try {
-      console.log('Attempting login with:', { email });
-      
-      // Run a raw SQL query to see all columns and data to help debugging
-      const { data: tableData, error: tableError } = await supabase
-        .rpc('debug_get_user_by_email', { user_email: email });
-      
-      if (!tableError) {
-        console.log('Raw user data from database:', tableData);
-      } else {
-        console.error('Error getting raw user data:', tableError);
-        
-        // Fallback to direct query
-        const { data: directData, error: directError } = await supabase
-          .from('usuarios')
-          .select('*')
-          .eq('email', email);
-          
-        if (!directError) {
-          console.log('Direct query result:', directData);
-        } else {
-          console.error('Direct query error:', directError);
-        }
-      }
-      
       // Get the user by email
       const user = await usersDb.getByEmail(email);
       
-      console.log('User check result:', user);
-      
       if (!user) {
-        console.log('User not found');
         return { 
           success: false, 
           message: 'Email não encontrado no sistema.' 
         };
       }
       
-      console.log('User found:', user);
-      
-      // Check the password
-      const correctPassword = user.password || user.senha; // Check both password and senha fields
+      // Check the password - handle both password and senha fields
+      const correctPassword = user.password || (user as any).senha;
       if (correctPassword !== password) {
-        console.log('Incorrect password');
         return { 
           success: false, 
           message: 'Senha incorreta. Por favor, tente novamente.' 
         };
       }
       
-      // Check if user is active and invitation is accepted
-      const isActive = user.active || user.ativo; // Check both active and ativo fields
-      const invitationStatus = user.invitation_status || user.status_do_convite; // Check both fields
+      // Check if user is active and invitation is accepted - handle both field naming conventions
+      const isActive = user.active || (user as any).ativo;
+      const invitationStatus = user.invitation_status || (user as any).status_do_convite;
       
       if (!isActive || (invitationStatus && invitationStatus !== 'accepted' && invitationStatus !== 'aceito')) {
-        console.log('Account inactive or pending:', { active: isActive, status: invitationStatus });
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
         };
       }
       
-      console.log('Login successful');
-      
       // Update last login time
       const lastLoginField = user.last_login !== undefined ? 'last_login' : 'ultimo_login';
       await supabase
-        .from('usuarios')
+        .from(usersDb.getCurrentTable())
         .update({ [lastLoginField]: new Date().toISOString() })
         .eq('id', user.id);
       
@@ -195,7 +157,7 @@ export const auth = {
       
       // Update user with reset token
       const { error } = await supabase
-        .from('users')
+        .from(usersDb.getCurrentTable())
         .update({
           reset_token: token,
           reset_token_expires: expiresAt.toISOString()
@@ -208,7 +170,6 @@ export const auth = {
       }
       
       // In a real app, you would send an email with the reset link
-      // For demo purposes, we'll just show the token in a toast message
       toast({
         title: "Link de recuperação gerado",
         description: `Token: ${token}`, // In a real app, you wouldn't show this
@@ -234,7 +195,7 @@ export const auth = {
       const now = new Date().toISOString();
       
       const { data, error } = await supabase
-        .from('users')
+        .from(usersDb.getCurrentTable())
         .select('*')
         .eq('reset_token', token)
         .gt('reset_token_expires', now)
@@ -249,7 +210,7 @@ export const auth = {
       
       // Update user's password and clear token
       const { error: updateError } = await supabase
-        .from('users')
+        .from(usersDb.getCurrentTable())
         .update({
           password: newPassword,
           reset_token: null,
@@ -272,19 +233,5 @@ export const auth = {
         message: `Erro ao redefinir senha: ${error.message}`
       };
     }
-  }
-};
-
-// Create a stored procedure for debugging
-export const createDebugProcedure = async () => {
-  try {
-    const { error } = await supabase.rpc('create_debug_procedure');
-    if (error) {
-      console.error('Error creating debug procedure:', error);
-    } else {
-      console.log('Debug procedure created successfully');
-    }
-  } catch (e) {
-    console.error('Exception creating debug procedure:', e);
   }
 };

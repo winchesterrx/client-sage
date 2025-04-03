@@ -1,8 +1,10 @@
-
 import { supabase } from '../client';
-import { Client } from '@/types/database';
+import { Client, Service, Payment, Project } from '@/types/database';
 import { dbGeneric } from './generic';
 import { toast } from 'sonner';
+import { servicesDb } from './services';
+import { paymentsDb } from './payments';
+import { projectsDb } from './projects';
 
 export const clientsDb = {
   getAll: async (): Promise<Client[]> => {
@@ -101,32 +103,52 @@ export const clientsDb = {
     }
   },
   
-  // Novo método para obter cliente com todos os serviços
-  getWithServices: async (id: number): Promise<{client: Client | null, services: any[]}> => {
+  // Método aprimorado para obter cliente com todos os serviços, pagamentos e projetos
+  getWithDetails: async (id: number): Promise<{
+    client: Client | null,
+    services: Service[],
+    payments: Payment[],
+    projects: Project[]
+  }> => {
     try {
-      console.log(`Fetching client with services, ID: ${id}`);
+      console.log(`Fetching client with full details, ID: ${id}`);
       const client = await clientsDb.getById(id);
       
       if (!client) {
-        return { client: null, services: [] };
+        return { 
+          client: null, 
+          services: [], 
+          payments: [], 
+          projects: [] 
+        };
       }
       
-      // Buscar serviços relacionados ao cliente
-      const { data: services, error: servicesError } = await supabase
-        .from('services')
-        .select('*')
-        .eq('client_id', id);
-        
-      if (servicesError) {
-        console.error('Error fetching client services:', servicesError);
-        return { client, services: [] };
-      }
+      // Buscar serviços relacionados ao cliente (usando método otimizado)
+      const services = await servicesDb.getByClient(id);
       
-      return { client, services: services || [] };
+      // Buscar pagamentos relacionados ao cliente
+      const payments = await paymentsDb.getByClient(id);
+      
+      // Buscar projetos relacionados ao cliente
+      const projects = await projectsDb.getByClient(id);
+      
+      console.log(`Found ${services.length} services, ${payments.length} payments, and ${projects.length} projects for client ${id}`);
+      
+      return { 
+        client, 
+        services: services || [], 
+        payments: payments || [], 
+        projects: projects || [] 
+      };
     } catch (error) {
-      console.error(`Error in getWithServices for client ${id}:`, error);
-      toast.error('Erro ao carregar cliente com serviços');
-      return { client: null, services: [] };
+      console.error(`Error in getWithDetails for client ${id}:`, error);
+      toast.error('Erro ao carregar detalhes completos do cliente');
+      return { 
+        client: null, 
+        services: [], 
+        payments: [], 
+        projects: [] 
+      };
     }
   }
 };

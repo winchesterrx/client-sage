@@ -1,4 +1,3 @@
-
 import { supabase } from '../client';
 import { Service } from '@/types/database';
 import { dbGeneric } from './generic';
@@ -21,7 +20,7 @@ export const servicesDb = {
     try {
       console.log(`Fetching services for client ID: ${clientId}`);
       
-      // Modificação na query para garantir resultados corretos
+      // Query otimizada para buscar serviços por cliente
       const { data, error } = await supabase
         .from('services')
         .select('*')
@@ -34,7 +33,7 @@ export const servicesDb = {
         return [];
       }
       
-      console.log(`Found ${data?.length || 0} services for client ${clientId}`, data);
+      console.log(`Found ${data?.length || 0} services for client ${clientId}`);
       return data as Service[] || [];
     } catch (error) {
       console.error(`Error fetching services for client ${clientId}:`, error);

@@ -20,8 +20,19 @@ export const clientsDb = {
   getById: async (id: number): Promise<Client | null> => {
     try {
       console.log(`Fetching client with ID: ${id}`);
-      const clients = await dbGeneric.get<Client>('clients', id);
-      return clients.length > 0 ? clients[0] : null;
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error(`Error fetching client ${id}:`, error);
+        toast.error('Erro ao carregar informações do cliente');
+        return null;
+      }
+      
+      return data as Client;
     } catch (error) {
       console.error(`Error fetching client ${id}:`, error);
       toast.error('Erro ao carregar informações do cliente');
@@ -89,4 +100,33 @@ export const clientsDb = {
       throw error;
     }
   },
+  
+  // Novo método para obter cliente com todos os serviços
+  getWithServices: async (id: number): Promise<{client: Client | null, services: any[]}> => {
+    try {
+      console.log(`Fetching client with services, ID: ${id}`);
+      const client = await clientsDb.getById(id);
+      
+      if (!client) {
+        return { client: null, services: [] };
+      }
+      
+      // Buscar serviços relacionados ao cliente
+      const { data: services, error: servicesError } = await supabase
+        .from('services')
+        .select('*')
+        .eq('client_id', id);
+        
+      if (servicesError) {
+        console.error('Error fetching client services:', servicesError);
+        return { client, services: [] };
+      }
+      
+      return { client, services: services || [] };
+    } catch (error) {
+      console.error(`Error in getWithServices for client ${id}:`, error);
+      toast.error('Erro ao carregar cliente com serviços');
+      return { client: null, services: [] };
+    }
+  }
 };

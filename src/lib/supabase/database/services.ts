@@ -20,6 +20,8 @@ export const servicesDb = {
   getByClient: async (clientId: number): Promise<Service[]> => {
     try {
       console.log(`Fetching services for client ID: ${clientId}`);
+      
+      // Modificação na query para garantir resultados corretos
       const { data, error } = await supabase
         .from('services')
         .select('*')
@@ -32,8 +34,8 @@ export const servicesDb = {
         return [];
       }
       
-      console.log(`Found ${data.length} services for client ${clientId}`);
-      return data as Service[];
+      console.log(`Found ${data?.length || 0} services for client ${clientId}`, data);
+      return data as Service[] || [];
     } catch (error) {
       console.error(`Error fetching services for client ${clientId}:`, error);
       toast.error('Erro ao carregar serviços do cliente');

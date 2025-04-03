@@ -14,9 +14,13 @@ export const dbGeneric = {
         query = query.eq(queryKey, queryValue);
       }
       
+      // Adicionar ordenação padrão por id, decrescente
+      query = query.order('id', { ascending: false });
+      
       const { data, error } = await query;
       
       if (error) {
+        console.error(`Error in dbGeneric.get for ${table}:`, error);
         throw error;
       }
       
@@ -38,7 +42,12 @@ export const dbGeneric = {
         .select();
       
       if (error) {
+        console.error(`Error in dbGeneric.create for ${table}:`, error);
         throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error(`No data returned after insert to ${table}`);
       }
       
       return data[0] as T;
@@ -59,7 +68,12 @@ export const dbGeneric = {
         .select();
       
       if (error) {
+        console.error(`Error in dbGeneric.update for ${table}:`, error);
         throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error(`No data returned after update to ${table} with id ${id}`);
       }
       
       return data[0] as T;
@@ -77,11 +91,32 @@ export const dbGeneric = {
         .eq('id', id);
       
       if (error) {
+        console.error(`Error in dbGeneric.delete for ${table}:`, error);
         throw error;
       }
     } catch (error) {
       console.error(`Error deleting item from ${table}:`, error);
       throw error;
+    }
+  },
+  
+  // Nova função para verificar se um registro existe
+  exists: async (table: string, id: number): Promise<boolean> => {
+    try {
+      const { count, error } = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true })
+        .eq('id', id);
+        
+      if (error) {
+        console.error(`Error in dbGeneric.exists for ${table}:`, error);
+        throw error;
+      }
+      
+      return count !== null && count > 0;
+    } catch (error) {
+      console.error(`Error checking if item exists in ${table}:`, error);
+      return false;
     }
   }
 };

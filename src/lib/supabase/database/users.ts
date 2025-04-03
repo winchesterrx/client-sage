@@ -3,8 +3,49 @@ import { supabase } from '../client';
 import { User } from '@/types/database';
 import { dbGeneric } from './generic';
 
-// Determine which table to use for users
-let USER_TABLE = 'usuarios';  // Based on the screenshot, this is the correct table name
+// Dynamic detection of the user table
+const detectUserTable = async (): Promise<string> => {
+  console.log('Detecting user table...');
+  try {
+    // Try 'usuarios' table first
+    const { data: usuariosCheck, error: usuariosError } = await supabase
+      .from('usuarios')
+      .select('count(*)')
+      .limit(1);
+    
+    if (!usuariosError) {
+      console.log('Found "usuarios" table');
+      return 'usuarios';
+    }
+    
+    // Try 'users' table next
+    const { data: usersCheck, error: usersError } = await supabase
+      .from('users')
+      .select('count(*)')
+      .limit(1);
+    
+    if (!usersError) {
+      console.log('Found "users" table');
+      return 'users';
+    }
+    
+    // If neither exists, default to 'usuarios'
+    console.warn('No user table detected, defaulting to "usuarios"');
+    return 'usuarios';
+  } catch (error) {
+    console.error('Error detecting user table:', error);
+    return 'usuarios'; // Default to usuarios in case of error
+  }
+};
+
+// Initialize the table name
+let USER_TABLE = 'usuarios';
+
+// Initialize the table detection
+detectUserTable().then(tableName => {
+  USER_TABLE = tableName;
+  console.log(`Using "${USER_TABLE}" as the user table`);
+});
 
 // Database operations specific to users
 export const usersDb = {
@@ -22,6 +63,7 @@ export const usersDb = {
   // Get user by email
   getByEmail: async (email: string): Promise<User | null> => {
     try {
+      console.log(`Searching for user with email: ${email} in table: ${USER_TABLE}`);
       const { data, error } = await supabase
         .from(USER_TABLE)
         .select('*')
@@ -33,6 +75,7 @@ export const usersDb = {
         return null;
       }
       
+      console.log(`User retrieval result:`, data);
       return data as User | null;
     } catch (error) {
       console.error(`Exception fetching user by email from ${USER_TABLE}:`, error);
@@ -90,6 +133,7 @@ export const usersDb = {
   // Set the user table dynamically 
   setUserTable: (tableName: string): void => {
     USER_TABLE = tableName;
+    console.log(`User table set to "${USER_TABLE}"`);
   },
   
   // Get the current table name

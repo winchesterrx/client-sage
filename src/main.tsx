@@ -6,7 +6,7 @@ import './index.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ErrorBoundary from './components/ui/error-boundary.tsx'
 import { db } from './lib/supabase/database/index.ts'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 
 // Inicializar sistema
 const initSystem = async () => {
@@ -19,10 +19,7 @@ const initSystem = async () => {
     
     if (!dbStatus.connected) {
       console.error('Failed to connect to database:', dbStatus.error);
-      toast.error('Erro de conexão com o banco de dados', {
-        description: dbStatus.error || 'Verifique as credenciais do Supabase',
-        duration: 5000
-      });
+      toast.error('Erro de conexão com o banco de dados');
       return;
     }
     
@@ -31,16 +28,9 @@ const initSystem = async () => {
     console.log('Overdue payments updated:', overdueUpdated);
     
     console.log('System initialized successfully');
-    toast.success('Sistema inicializado com sucesso', {
-      description: 'Banco de dados conectado e pagamentos atualizados',
-      duration: 3000
-    });
   } catch (error) {
     console.error("Error initializing system:", error);
-    toast.error('Erro ao inicializar sistema', {
-      description: error instanceof Error ? error.message : 'Erro desconhecido',
-      duration: 5000
-    });
+    toast.error('Erro ao inicializar sistema');
   }
 }
 
@@ -56,17 +46,13 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       onError: (error) => {
         console.error('Query error:', error);
-        toast.error('Erro ao carregar dados', {
-          description: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
+        toast.error('Erro ao carregar dados');
       }
     },
     mutations: {
       onError: (error) => {
         console.error('Mutation error:', error);
-        toast.error('Erro ao salvar dados', {
-          description: error instanceof Error ? error.message : 'Erro desconhecido',
-        });
+        toast.error('Erro ao salvar dados');
       }
     }
   },
@@ -77,7 +63,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <App />
-        <Toaster richColors position="top-right" />
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>

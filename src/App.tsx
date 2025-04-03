@@ -19,52 +19,49 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import { Toaster } from 'sonner';
-import { ThemeProvider } from 'next-themes';
+import { Toaster } from '@/components/ui/toaster';
 
 // Import the UserManagement component
 import UserManagement from './pages/admin/UserManagement';
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="App">
-        <Router>
-          <AuthProvider>
+    <div className="App">
+      <Router>
+        <AuthProvider>
+          
+          <Routes>
+            <Route path="/" element={<Index />} />
             
-            <Routes>
-              <Route path="/" element={<Index />} />
-              
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/clients/:id" element={<ClientDetail />} />
-                  <Route path="/services" element={<Services />} />
-                  <Route path="/services/:id" element={<ServiceDetail />} />
-                  <Route path="/projects" element={<Projects />} />
-                  <Route path="/projects/:id" element={<ProjectDetail />} />
-                  <Route path="/finances" element={<Finances />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin/users" element={<UserManagement />} /> {/* New route */}
-                </Route>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clients" element={<Clients />} />
+                <Route path="/clients/:id" element={<ClientDetail />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/services/:id" element={<ServiceDetail />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/finances" element={<Finances />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin/users" element={<UserManagement />} /> {/* New route */}
               </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            </Route>
             
-          </AuthProvider>
-        </Router>
-        <Toaster richColors closeButton position="top-right" />
-      </div>
-    </ThemeProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          
+        </AuthProvider>
+      </Router>
+      <Toaster />
+    </div>
   );
 }
 

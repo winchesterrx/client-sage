@@ -41,13 +41,14 @@ const UserManagement = () => {
   // Mutation to update user status
   const updateUserMutation = useMutation({
     mutationFn: async ({ userId, status, active }: { userId: number, status: 'accepted' | 'rejected', active: boolean }) => {
-      return await db.users.update(userId, { 
-        invitation_status: status,
-        active
-      });
-      console.log("Resposta da mutação:", res);
+  const res = await db.users.update(userId, { 
+    invitation_status: status,
+    active
+  });
+  console.log("Resposta da mutação:", res);
   return res;
-    },
+},
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

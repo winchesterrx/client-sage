@@ -39,14 +39,14 @@ const Register = () => {
     try {
       setLoading(true);
       
-      // Use auth.register instead of db.users.create
+      // Use auth.register - remove the 'active' property since it's not expected in the parameter
       const result = await auth.register({
         name,
         email,
         password,
         role: "user", // Specify role as a literal type
-        invitation_status: "pending",
-        active: false
+        invitation_status: "pending"
+        // Removed the 'active' property
       });
       
       if (result.success) {

@@ -1,220 +1,228 @@
-
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon } from "@radix-ui/react-icons";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useToast } from "@/components/ui/use-toast";
 import { db } from '@/lib/supabase';
-import { Service } from '@/types/database';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
-const formSchema = z.object({
-  service_id: z.string().min(1, 'Serviço é obrigatório'),
-  amount: z.string().min(1, 'Valor é obrigatório'),
-  due_date: z.string().min(1, 'Data de vencimento é obrigatória'),
-  payment_method: z.string().min(1, 'Método de pagamento é obrigatório'),
-  notes: z.string().optional(),
-  status: z.string().min(1, 'Status é obrigatório'),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
+// Update the props interface to include onPaymentAdded
 interface AddPaymentFormProps {
   clientId: number;
-  services: Service[];
-  onSuccess?: () => void;
+  onPaymentAdded: () => void;
 }
 
-const AddPaymentForm = ({ clientId, services, onSuccess }: AddPaymentFormProps) => {
-  const queryClient = useQueryClient();
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      service_id: '',
-      amount: '',
-      due_date: new Date().toISOString().split('T')[0],
-      payment_method: 'pix',
-      notes: '',
-      status: 'pending',
-    },
-  });
+const AddPaymentForm = ({ clientId, onPaymentAdded }: AddPaymentFormProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [serviceId, setServiceId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [status, setStatus] = useState<'pending' | 'paid' | 'overdue'>('pending');
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const [services, setServices] = useState<any[]>([]);
 
-  const createPaymentMutation = useMutation({
-    mutationFn: async (values: FormValues) => {
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const servicesData = await db.services.getAll();
+        setServices(servicesData);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load services.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchServices();
+  }, [toast]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      
+      // Cast the status to the correct type
       const paymentData = {
         client_id: clientId,
-        service_id: parseInt(values.service_id),
-        amount: parseFloat(values.amount),
-        payment_date: values.status === 'paid' ? new Date().toISOString() : null,
-        due_date: values.due_date,
-        payment_method: values.payment_method,
-        notes: values.notes || '',
-        status: values.status,
+        service_id: parseInt(serviceId),
+        amount: parseFloat(amount),
+        payment_date: paymentDate,
+        due_date: dueDate,
+        payment_method: paymentMethod,
+        notes: notes || '',
+        status: status as 'pending' | 'paid' | 'overdue', // Type cast to match expected type
       };
       
-      return await db.payments.create(paymentData);
-    },
-    onSuccess: () => {
-      toast.success('Pagamento adicionado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['client-payments', clientId] });
-      form.reset();
-      if (onSuccess) onSuccess();
-    },
-    onError: (error) => {
-      console.error('Error creating payment:', error);
-      toast.error('Erro ao adicionar pagamento');
-    },
-  });
-
-  const onSubmit = (values: FormValues) => {
-    createPaymentMutation.mutate(values);
+      await db.payments.create(paymentData);
+      
+      toast.success("Pagamento adicionado com sucesso!");
+      
+      // Reset form fields
+      setServiceId('');
+      setAmount('');
+      setPaymentDate('');
+      setDueDate('');
+      setPaymentMethod('');
+      setStatus('pending');
+      setNotes('');
+      
+      // Close modal and refresh data
+      setIsOpen(false);
+      
+      // Call the onPaymentAdded callback to refresh the parent component
+      onPaymentAdded();
+      
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      toast.error("Erro ao adicionar pagamento");
+    } finally {
+      setLoading(false);
+    }
   };
-
+  
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="service_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Serviço</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um serviço" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.service_type} - R$ {service.price}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div>
+        <Label htmlFor="serviceId">Serviço</Label>
+        <Select onValueChange={setServiceId} defaultValue={serviceId}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Selecione um serviço" />
+          </SelectTrigger>
+          <SelectContent>
+            {services.map((service) => (
+              <SelectItem key={service.id} value={String(service.id)}>
+                {service.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="amount">Valor</Label>
+        <Input
+          type="number"
+          id="amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.00"
+          required
         />
-        
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Valor</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.01" placeholder="0.00" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      <div>
+        <Label htmlFor="paymentDate">Data de Pagamento</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !paymentDate && "text-muted-foreground"
+              )}
+            >
+              {paymentDate ? (
+                format(paymentDate, "PPP")
+              ) : (
+                <span>Selecione a data</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center" side="bottom">
+            <Calendar
+              mode="single"
+              selected={paymentDate}
+              onSelect={setPaymentDate}
+              disabled={(date) =>
+                date > new Date()
+              }
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div>
+        <Label htmlFor="dueDate">Data de Vencimento</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dueDate && "text-muted-foreground"
+              )}
+            >
+              {dueDate ? (
+                format(dueDate, "PPP")
+              ) : (
+                <span>Selecione a data</span>
+              )}
+              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center" side="bottom">
+            <Calendar
+              mode="single"
+              selected={dueDate}
+              onSelect={setDueDate}
+              disabled={(date) =>
+                date < new Date()
+              }
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div>
+        <Label htmlFor="paymentMethod">Método de Pagamento</Label>
+        <Input
+          type="text"
+          id="paymentMethod"
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+          placeholder="Dinheiro, Cartão, Transferência..."
+          required
         />
-        
-        <FormField
-          control={form.control}
-          name="due_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Data de Vencimento</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      <div>
+        <Label htmlFor="status">Status</Label>
+        <Select onValueChange={setStatus} defaultValue={status}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Selecione o status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pendente</SelectItem>
+            <SelectItem value="paid">Pago</SelectItem>
+            <SelectItem value="overdue">Atrasado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="notes">Notas</Label>
+        <Input
+          type="text"
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Observações adicionais..."
         />
-        
-        <FormField
-          control={form.control}
-          name="payment_method"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Método de Pagamento</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o método de pagamento" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                  <SelectItem value="debit_card">Cartão de Débito</SelectItem>
-                  <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
-                  <SelectItem value="cash">Dinheiro</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="paid">Pago</SelectItem>
-                  <SelectItem value="overdue">Atrasado</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Observações</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Observações sobre o pagamento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={createPaymentMutation.isPending}
-        >
-          {createPaymentMutation.isPending ? 'Salvando...' : 'Adicionar Pagamento'}
-        </Button>
-      </form>
-    </Form>
+      </div>
+      <Button type="submit" disabled={loading}>
+        {loading ? "Adicionando..." : "Adicionar Pagamento"}
+      </Button>
+    </form>
   );
 };
 

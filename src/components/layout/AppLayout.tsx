@@ -1,83 +1,64 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileSidebar from './MobileSidebar';
 import Footer from './Footer';
-import { initializeDatabase } from '@/services/api';
-import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Outlet } from 'react-router-dom';
-import ErrorBoundary from '@/components/ui/error-boundary';
+import { useMobile } from '@/hooks/useMobile';
+import { Menu } from 'lucide-react';
 
-interface AppLayoutProps {
-  children?: React.ReactNode;
-}
+const AppLayout = () => {
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const isMobile = useMobile();
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    // Initialize database with sample data
-    const initialize = async () => {
-      try {
-        setIsLoading(true);
-        const success = await initializeDatabase();
-        
-        if (success) {
-          toast.success("Conectado ao banco de dados com sucesso!");
-        } else {
-          toast.info("Usando armazenamento local para salvar os dados.", {
-            description: "Os dados serão salvos apenas no seu navegador.",
-            duration: 5000
-          });
-        }
-        
-        setIsInitialized(true);
-      } catch (error) {
-        console.error("Failed to initialize:", error);
-        toast.info("Usando armazenamento local para salvar os dados.", {
-          description: "Não foi possível conectar ao servidor.",
-          duration: 5000
-        });
-        setIsInitialized(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-  }, []);
+  // Function to toggle mobile sidebar
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <div className="flex flex-1">
-        {isMobile ? <MobileSidebar /> : <Sidebar isOpen={true} />}
-        <main className={`flex-1 ${!isMobile ? 'ml-64' : 'ml-0'} flex flex-col`}>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-center">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-                <p className="mt-4 text-gray-600">Inicializando aplicação...</p>
-              </div>
-            </div>
-          ) : (
-            <div className="container mx-auto py-8 px-4 sm:px-6 max-w-7xl flex-1 animate-fade-in">
-              {!isInitialized && (
-                <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
-                  <p className="text-blue-700">
-                    Aplicação em modo offline. Os dados serão salvos apenas no seu navegador.
-                  </p>
-                </div>
-              )}
-              <ErrorBoundary>
-                <Outlet />
-              </ErrorBoundary>
-            </div>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Desktop sidebar - only show on desktop */}
+      {!isMobile && (
+        <div className="w-64 hidden md:block">
+          <Sidebar />
+        </div>
+      )}
+
+      {/* Mobile sidebar - controlled by state */}
+      {isMobile && (
+        <MobileSidebar 
+          isOpen={isMobileSidebarOpen} 
+          onClose={() => setIsMobileSidebarOpen(false)} 
+        />
+      )}
+
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white shadow-sm h-16 flex items-center px-4">
+          {/* Mobile menu button */}
+          {isMobile && (
+            <button
+              onClick={toggleMobileSidebar}
+              className="mr-4 text-gray-500 focus:outline-none"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           )}
-          <Footer />
+
+          <div className="flex-1">
+            {/* Header content */}
+          </div>
+
+          {/* User dropdown can go here */}
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <Outlet />
         </main>
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

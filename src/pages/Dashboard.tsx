@@ -3,12 +3,13 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { db } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ButtonLink } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
+import { ButtonLink } from '@/components/ui/button-link';
 import { UserRound, Users, FileText, Package, Clock, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-// Import the chart for statistics
-import { Chart } from '@/components/ui/chart';
+// Import recharts components directly for statistics
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -83,6 +84,32 @@ const Dashboard = () => {
     );
   }
 
+  // Custom Chart component for pie charts
+  const SimpleChart = ({ data, colors }: { data: any[], colors: string[] }) => {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+            nameKey="name"
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -143,8 +170,7 @@ const Dashboard = () => {
             <CardDescription>Distribuição dos pagamentos por status</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <Chart 
-              type="pie"
+            <SimpleChart 
               data={[
                 { name: 'Pagos', value: metrics.paidPayments },
                 { name: 'Pendentes', value: metrics.pendingPayments },
@@ -162,8 +188,7 @@ const Dashboard = () => {
             <CardDescription>Distribuição dos projetos por status</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <Chart 
-              type="pie"
+            <SimpleChart 
               data={[
                 { name: 'Em Andamento', value: metrics.inProgressProjects },
                 { name: 'Concluídos', value: metrics.completedProjects },

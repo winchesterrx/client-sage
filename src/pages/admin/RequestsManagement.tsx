@@ -51,22 +51,25 @@ const RequestsManagement = () => {
     },
   });
 
-  const handleInvitation = async (userId: number, status: 'accepted' | 'rejected') => {
-    try {
-      await updateUserMutation.mutateAsync({ 
-        userId, 
-        status, 
-        active: status === 'accepted'
-      });
-      
-      toast.success(status === 'accepted' 
-        ? "Usuário aprovado com sucesso" 
-        : "Solicitação rejeitada");
-    } catch (error) {
-      console.error('Error updating user:', error);
-      toast.error("Erro ao processar solicitação");
-    }
-  };
+const handleInvitation = async (userId: number, status: 'accepted' | 'rejected') => {
+  console.log(`Aprovando ou rejeitando usuário ID: ${userId} com status: ${status}`);
+
+  try {
+    await updateUserMutation.mutateAsync({ 
+      userId, 
+      status, 
+      active: status === 'accepted'
+    });
+    
+    toast.success(status === 'accepted' 
+      ? "Usuário aprovado com sucesso" 
+      : "Solicitação rejeitada");
+  } catch (error) {
+    console.error('Error updating user:', error);
+    toast.error("Erro ao processar solicitação");
+  }
+};
+
 
   if (isLoading) {
     return (

@@ -17,7 +17,7 @@ const detectUserTable = async (): Promise<string> => {
     }
 
     const { error: usersError } = await supabase
-      .from('users')
+      .from('usuarios')
       .select('id')
       .limit(1);
 

@@ -172,10 +172,8 @@ export const auth = {
       }
       
       // In a real app, you would send an email with the reset link
-      toast({
-        title: "Link de recuperação gerado",
-        description: `Token: ${token}`, // In a real app, you wouldn't show this
-      });
+      // For demo purposes, we'll just show the token in a toast
+      toast(`Token: ${token}`);
       
       return {
         success: true,

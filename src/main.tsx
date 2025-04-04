@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ErrorBoundary from './components/ui/error-boundary.tsx'
 import { db } from './lib/supabase/database/index.ts'
 import { toast } from 'sonner'
+import { ThemeProvider } from 'next-themes'
 
 // Inicializar sistema
 const initSystem = async () => {
@@ -62,7 +63,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <App />
+        </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>

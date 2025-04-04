@@ -45,15 +45,19 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: 2,
       staleTime: 5 * 60 * 1000, // 5 minutes
-      onError: (error) => {
-        console.error('Query error:', error);
-        toast.error('Erro ao carregar dados');
+      meta: {
+        onError: (error: any) => {
+          console.error('Query error:', error);
+          toast.error('Erro ao carregar dados');
+        }
       }
     },
     mutations: {
-      onError: (error) => {
-        console.error('Mutation error:', error);
-        toast.error('Erro ao salvar dados');
+      meta: {
+        onError: (error: any) => {
+          console.error('Mutation error:', error);
+          toast.error('Erro ao salvar dados');
+        }
       }
     }
   },

@@ -1,148 +1,120 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { NavLink } from 'react-router-dom';
+import { cn } from "@/lib/utils";
 import { useAuth } from '@/contexts/AuthContext';
-import { Home, Users, Settings, BarChart3, ListChecks, DollarSign, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { 
+  Home, Users, Briefcase, FileText, FolderClosed, Settings, 
+  DollarSign, LogOut, ShieldAlert, ClipboardList
+} from 'lucide-react';
 
-interface SidebarProps {
-  isOpen: boolean;
-}
+const Sidebar = () => {
+  const { user, logout } = useAuth();
+  
+  const isAdmin = user?.role === 'admin' || user?.role === 'master';
 
-const Sidebar = ({ isOpen }: SidebarProps) => {
-  const { user } = useAuth();
-  const { pathname } = useLocation();
+  const handleLogout = () => {
+    logout();
+  };
+
+  // Navigation items
+  const navItems = [
+    { icon: <Home className="mr-3 h-5 w-5" />, name: "Dashboard", path: "/dashboard" },
+    { icon: <Users className="mr-3 h-5 w-5" />, name: "Clientes", path: "/clients" },
+    { icon: <Briefcase className="mr-3 h-5 w-5" />, name: "Serviços", path: "/services" },
+    { icon: <FolderClosed className="mr-3 h-5 w-5" />, name: "Projetos", path: "/projects" },
+    { icon: <FileText className="mr-3 h-5 w-5" />, name: "Finanças", path: "/finances" },
+  ];
+
+  // Admin only items
+  const adminItems = [
+    { icon: <ShieldAlert className="mr-3 h-5 w-5" />, name: "Usuários", path: "/admin/users" },
+    { icon: <ClipboardList className="mr-3 h-5 w-5" />, name: "Solicitações", path: "/admin/requests" },
+  ];
 
   return (
-    <div
-      className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-gray-50 border-r border-gray-200 transition-transform duration-300 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        "lg:translate-x-0 lg:sticky top-0 h-screen"
-      )}
-    >
-      <div className="flex items-center justify-center h-16 border-b border-gray-200">
-        <Link to="/" className="text-2xl font-bold text-blue-600">
-          Clientes<span className="text-gray-600">OWL</span>
-        </Link>
+    <aside className="h-full flex flex-col bg-white border-r shadow-sm">
+      <div className="p-4 border-b">
+        <h2 className="text-xl font-bold text-gray-800">SysAdmin</h2>
+        <p className="text-sm text-gray-500">Gerenciamento de sistemas</p>
       </div>
 
-      <div className="px-4 py-6">
-        {/* Main Navigation */}
-        <div className="space-y-1">
-          <Link
-            to="/dashboard"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/dashboard"
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <Home className="mr-3 h-5 w-5" />
-            Dashboard
-          </Link>
+      <div className="flex flex-col flex-1 overflow-y-auto p-4">
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center text-sm px-3 py-2 rounded-md transition-colors",
+                  isActive 
+                    ? "text-white bg-blue-600 hover:bg-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                )
+              }
+            >
+              {item.icon}
+              <span>{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
 
-          <Link
-            to="/clients"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/clients" || pathname.startsWith("/clients/")
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <Users className="mr-3 h-5 w-5" />
-            Clientes
-          </Link>
+        {isAdmin && (
+          <>
+            <div className="my-4">
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Administração
+              </div>
+              <div className="mt-2 space-y-1">
+                {adminItems.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center text-sm px-3 py-2 rounded-md transition-colors",
+                        isActive 
+                          ? "text-white bg-blue-600 hover:bg-blue-700" 
+                          : "text-gray-700 hover:bg-gray-100"
+                      )
+                    }
+                  >
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
-          <Link
-            to="/services"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/services" || pathname.startsWith("/services/")
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <Package className="mr-3 h-5 w-5" />
-            Serviços
-          </Link>
-
-          <Link
-            to="/projects"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/projects" || pathname.startsWith("/projects/")
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <ListChecks className="mr-3 h-5 w-5" />
-            Projetos
-          </Link>
-
-          <Link
-            to="/finances"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/finances"
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <DollarSign className="mr-3 h-5 w-5" />
-            Financeiro
-          </Link>
-
-          <Link
+        <div className="mt-auto">
+          <NavLink
             to="/settings"
-            className={cn(
-              "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-              pathname === "/settings"
-                ? "bg-primary-foreground text-primary"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center text-sm px-3 py-2 rounded-md transition-colors",
+                isActive 
+                  ? "text-white bg-blue-600 hover:bg-blue-700" 
+                  : "text-gray-700 hover:bg-gray-100"
+              )
+            }
           >
             <Settings className="mr-3 h-5 w-5" />
-            Configurações
-          </Link>
+            <span>Configurações</span>
+          </NavLink>
           
-          {/* Show user management link only for master users */}
-          {user && user.role === 'master' && (
-            <Link
-              to="/admin/users"
-              className={cn(
-                "flex items-center py-2 px-4 text-sm font-medium rounded-md",
-                pathname === "/admin/users" 
-                  ? "bg-primary-foreground text-primary"
-                  : "text-gray-600 hover:bg-gray-100"
-              )}
-            >
-              <Users className="mr-3 h-5 w-5" />
-              Usuários
-            </Link>
-          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center text-sm px-3 py-2 mt-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            <span>Sair</span>
+          </button>
         </div>
       </div>
-
-      <div className="absolute bottom-0 left-0 w-full border-t border-gray-200 p-4">
-        {user ? (
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-900">{user.name}</div>
-            <div className="text-xs text-gray-500">{user.email}</div>
-            <Button variant="secondary" size="sm" className="w-full" onClick={() => {}}>
-              Sair
-            </Button>
-          </div>
-        ) : (
-          <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-            Entrar
-          </Link>
-        )}
-      </div>
-    </div>
+    </aside>
   );
 };
 

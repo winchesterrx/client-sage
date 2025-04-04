@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -17,6 +18,7 @@ import {
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, UserPlus, UserCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
@@ -51,16 +53,24 @@ const Register = () => {
   const onSubmit = async (values: RegisterValues) => {
     const { confirmPassword, ...userData } = values;
     
-    const userToRegister = {
-      name: userData.name,
-      email: userData.email,
-      password: userData.password,
-      role: userData.role
-    };
-    
-    const result = await register(userToRegister);
-    if (result) {
-      setRegistrationSubmitted(true);
+    try {
+      const userToRegister = {
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role,
+        invitation_status: 'pending',
+        active: false
+      };
+      
+      const result = await register(userToRegister);
+      if (result) {
+        setRegistrationSubmitted(true);
+        toast.success('Solicitação de registro enviada com sucesso!');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast.error(`Erro ao registrar: ${error.message || 'Verifique os dados e tente novamente'}`);
     }
   };
 

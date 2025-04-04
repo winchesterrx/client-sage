@@ -1,7 +1,7 @@
 
 import { supabase, detectUserTable } from './client';
 import { User } from '@/types/database';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { usersDb } from './database/users';
 
 // As soon as this module is imported, detect the correct table
@@ -32,10 +32,16 @@ export const auth = {
       }
       
       // Insert the new user with pending invitation status
+      const tableName = usersDb.getCurrentTable();
+      console.log(`Registering user in table: ${tableName}`);
+      
       const { data, error } = await supabase
-        .from('usuarios')  // Use the correct table name
+        .from(tableName)
         .insert({
-          ...user,
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          role: user.role,
           invitation_status: 'pending',
           active: false
         })
@@ -82,11 +88,8 @@ export const auth = {
         };
       }
       
-      // Check if user is active and invitation is accepted - handle both field naming conventions
-      const isActive = user.active || (user as any).ativo;
-      const invitationStatus = user.invitation_status || (user as any).status_do_convite;
-      
-      if (!isActive || (invitationStatus && invitationStatus !== 'accepted' && invitationStatus !== 'aceito')) {
+      // Check if user is active and invitation is accepted
+      if (!user.active || user.invitation_status !== 'accepted') {
         return {
           success: false,
           message: 'Sua conta está aguardando aprovação ou foi desativada. Entre em contato com o administrador.'
@@ -94,10 +97,9 @@ export const auth = {
       }
       
       // Update last login time
-      const lastLoginField = user.last_login !== undefined ? 'last_login' : 'ultimo_login';
       await supabase
         .from(usersDb.getCurrentTable())
-        .update({ [lastLoginField]: new Date().toISOString() })
+        .update({ last_login: new Date().toISOString() })
         .eq('id', user.id);
       
       // Store user info in localStorage

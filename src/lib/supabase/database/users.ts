@@ -1,4 +1,3 @@
-
 import { supabase } from '../client';
 import { User } from '@/types/database';
 import { dbGeneric } from './generic';
@@ -60,7 +59,7 @@ export const usersDb = {
     return users.length > 0 ? users[0] : null;
   },
   
-  // Get user by email
+  // Get user by email - improved version with better error handling
   getByEmail: async (email: string): Promise<User | null> => {
     try {
       console.log(`Searching for user with email: ${email} in table: ${USER_TABLE}`);
@@ -75,8 +74,29 @@ export const usersDb = {
         return null;
       }
       
-      console.log(`User retrieval result:`, data);
-      return data as User | null;
+      if (!data) {
+        console.log(`No user found with email ${email}`);
+        return null;
+      }
+      
+      // Map database fields to User type if needed
+      const user: User = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+        invitation_status: data.invitation_status,
+        active: data.active ?? false,
+        reset_token: data.reset_token,
+        reset_token_expires: data.reset_token_expires,
+        last_login: data.last_login,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      
+      console.log(`User retrieval result:`, user);
+      return user;
     } catch (error) {
       console.error(`Exception fetching user by email from ${USER_TABLE}:`, error);
       return null;
@@ -124,10 +144,27 @@ export const usersDb = {
     status: 'accepted' | 'rejected', 
     active: boolean
   ): Promise<User> => {
-    return dbGeneric.update<User>(USER_TABLE, id, { 
-      invitation_status: status,
-      active 
-    });
+    try {
+      const { data, error } = await supabase
+        .from(USER_TABLE)
+        .update({ 
+          invitation_status: status,
+          active 
+        })
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error(`Error updating invitation status in ${USER_TABLE}:`, error);
+        throw error;
+      }
+      
+      return data as User;
+    } catch (error) {
+      console.error(`Error updating invitation status:`, error);
+      throw error;
+    }
   },
   
   // Set the user table dynamically 

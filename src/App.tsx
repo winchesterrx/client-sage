@@ -21,8 +21,9 @@ import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
 
-// Import the UserManagement component
+// Import the admin pages
 import UserManagement from './pages/admin/UserManagement';
+import RequestsManagement from './pages/admin/RequestsManagement';
 
 function App() {
   return (
@@ -51,7 +52,8 @@ function App() {
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/finances" element={<Finances />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/admin/users" element={<UserManagement />} /> {/* New route */}
+                <Route path="/admin/users" element={<UserManagement />} />
+                <Route path="/admin/requests" element={<RequestsManagement />} /> {/* New route */}
               </Route>
             </Route>
             

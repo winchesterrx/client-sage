@@ -1,184 +1,220 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { db } from '@/lib/supabase';
 import { Service } from '@/types/database';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { paymentsDb } from '@/lib/supabase/database/payments';
-import { servicesDb } from '@/lib/supabase/database/services';
-import { toast } from 'sonner';
-import { PlusCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const formSchema = z.object({
+  service_id: z.string().min(1, 'Serviço é obrigatório'),
+  amount: z.string().min(1, 'Valor é obrigatório'),
+  due_date: z.string().min(1, 'Data de vencimento é obrigatória'),
+  payment_method: z.string().min(1, 'Método de pagamento é obrigatório'),
+  notes: z.string().optional(),
+  status: z.string().min(1, 'Status é obrigatório'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AddPaymentFormProps {
   clientId: number;
-  onPaymentAdded: () => void;
+  services: Service[];
+  onSuccess?: () => void;
 }
 
-const AddPaymentForm: React.FC<AddPaymentFormProps> = ({ clientId, onPaymentAdded }) => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    service_id: '',
-    amount: '',
-    due_date: new Date().toISOString().split('T')[0],
-    payment_method: 'Transferência',
-    notes: ''
+const AddPaymentForm = ({ clientId, services, onSuccess }: AddPaymentFormProps) => {
+  const queryClient = useQueryClient();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      service_id: '',
+      amount: '',
+      due_date: new Date().toISOString().split('T')[0],
+      payment_method: 'pix',
+      notes: '',
+      status: 'pending',
+    },
   });
 
-  useEffect(() => {
-    const loadServices = async () => {
-      const clientServices = await servicesDb.getByClient(clientId);
-      setServices(clientServices);
-    };
-
-    loadServices();
-  }, [clientId]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleServiceChange = (value: string) => {
-    setFormData(prev => ({ ...prev, service_id: value }));
-    
-    // Preencher o valor do pagamento com o preço do serviço selecionado
-    const selectedService = services.find(s => s.id === parseInt(value));
-    if (selectedService) {
-      setFormData(prev => ({ ...prev, amount: selectedService.price.toString() }));
-    }
-  };
-
-  const handlePaymentMethodChange = (value: string) => {
-    setFormData(prev => ({ ...prev, payment_method: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.service_id || !formData.amount || !formData.due_date) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      
+  const createPaymentMutation = useMutation({
+    mutationFn: async (values: FormValues) => {
       const paymentData = {
         client_id: clientId,
-        service_id: parseInt(formData.service_id),
-        amount: parseFloat(formData.amount),
-        due_date: formData.due_date,
-        payment_method: formData.payment_method,
-        notes: formData.notes,
-        status: 'pending',
+        service_id: parseInt(values.service_id),
+        amount: parseFloat(values.amount),
+        payment_date: values.status === 'paid' ? new Date().toISOString() : null,
+        due_date: values.due_date,
+        payment_method: values.payment_method,
+        notes: values.notes || '',
+        status: values.status,
       };
       
-      await paymentsDb.create(paymentData);
-      
-      // Limpar formulário
-      setFormData({
-        service_id: '',
-        amount: '',
-        due_date: new Date().toISOString().split('T')[0],
-        payment_method: 'Transferência',
-        notes: ''
-      });
-      
-      toast.success('Pagamento adicionado com sucesso');
-      onPaymentAdded();
-    } catch (error) {
-      console.error('Error adding payment:', error);
+      return await db.payments.create(paymentData);
+    },
+    onSuccess: () => {
+      toast.success('Pagamento adicionado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['client-payments', clientId] });
+      form.reset();
+      if (onSuccess) onSuccess();
+    },
+    onError: (error) => {
+      console.error('Error creating payment:', error);
       toast.error('Erro ao adicionar pagamento');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const onSubmit = (values: FormValues) => {
+    createPaymentMutation.mutate(values);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-md">
-      <h3 className="text-lg font-medium">Adicionar Novo Pagamento</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="service_id">Serviço</Label>
-          <Select value={formData.service_id} onValueChange={handleServiceChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um serviço" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.length > 0 ? (
-                services.map((service) => (
-                  <SelectItem key={service.id} value={service.id.toString()}>
-                    {service.service_type} - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(service.price)}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="none" disabled>Nenhum serviço disponível</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="amount">Valor</Label>
-          <Input
-            id="amount"
-            name="amount"
-            type="number"
-            step="0.01"
-            value={formData.amount}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="due_date">Data de Vencimento</Label>
-          <Input
-            id="due_date"
-            name="due_date"
-            type="date"
-            value={formData.due_date}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="payment_method">Método de Pagamento</Label>
-          <Select value={formData.payment_method} onValueChange={handlePaymentMethodChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o método" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Transferência">Transferência</SelectItem>
-              <SelectItem value="PIX">PIX</SelectItem>
-              <SelectItem value="Cartão de Crédito">Cartão de Crédito</SelectItem>
-              <SelectItem value="Boleto">Boleto</SelectItem>
-              <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="notes">Observações</Label>
-        <Input
-          id="notes"
-          name="notes"
-          value={formData.notes}
-          onChange={handleChange}
-          placeholder="Observações adicionais (opcional)"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="service_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Serviço</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um serviço" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.service_type} - R$ {service.price}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <Button type="submit" disabled={loading} className="w-full">
-        <PlusCircle className="mr-2 h-4 w-4" />
-        {loading ? 'Adicionando...' : 'Adicionar Pagamento'}
-      </Button>
-    </form>
+        
+        <FormField
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Valor</FormLabel>
+              <FormControl>
+                <Input type="number" step="0.01" placeholder="0.00" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="due_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Data de Vencimento</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="payment_method"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Método de Pagamento</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o método de pagamento" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
+                  <SelectItem value="debit_card">Cartão de Débito</SelectItem>
+                  <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                  <SelectItem value="cash">Dinheiro</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="paid">Pago</SelectItem>
+                  <SelectItem value="overdue">Atrasado</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Observações</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Observações sobre o pagamento" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={createPaymentMutation.isPending}
+        >
+          {createPaymentMutation.isPending ? 'Salvando...' : 'Adicionar Pagamento'}
+        </Button>
+      </form>
+    </Form>
   );
 };
 

@@ -1,93 +1,84 @@
-import React, { useEffect, useState } from 'react';
+
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { db, checkSupabaseConnection } from '@/lib/supabase';
-import SetupGuide from '@/components/supabase/SetupGuide';
+import { db } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUpRight, BarChart3, Clock, DollarSign, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/utils/formatters';
-import { Link } from 'react-router-dom';
+import { ButtonLink } from '@/components/ui/button';
+import { UserRound, Users, FileText, Package, Clock, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Import the chart for statistics
+import { Chart } from '@/components/ui/chart';
 
 const Dashboard = () => {
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const isConnected = await checkSupabaseConnection();
-        setIsSupabaseConnected(isConnected);
-      } catch (error) {
-        console.error('Erro ao verificar conexão com Supabase:', error);
-        setIsSupabaseConnected(false);
-      }
-    };
+  const { user } = useAuth();
+
+  // Fetching data with React Query
+  const { data: clients, isLoading: isLoadingClients } = useQuery({
+    queryKey: ['clients'],
+    queryFn: async () => {
+      const clients = await db.clients.getAll();
+      return clients;
+    },
+  });
+
+  const { data: payments, isLoading: isLoadingPayments } = useQuery({
+    queryKey: ['payments'],
+    queryFn: async () => {
+      const payments = await db.payments.getAll();
+      return payments;
+    },
+  });
+
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const projects = await db.projects.getAll();
+      return projects;
+    },
+  });
+
+  const { data: services, isLoading: isLoadingServices } = useQuery({
+    queryKey: ['services'],
+    queryFn: async () => {
+      const services = await db.services.getAll();
+      return services;
+    },
+  });
+
+  // Calculate metrics
+  const calculateMetrics = () => {
+    const totalClients = clients?.length || 0;
+    const totalServices = services?.length || 0;
+    const totalProjects = projects?.length || 0;
     
-    checkConnection();
-  }, []);
+    const pendingPayments = payments?.filter(p => p.status === 'pending').length || 0;
+    const overduePayments = payments?.filter(p => p.status === 'overdue').length || 0;
+    const paidPayments = payments?.filter(p => p.status === 'paid').length || 0;
+    
+    const inProgressProjects = projects?.filter(p => p.status === 'in_progress').length || 0;
+    const completedProjects = projects?.filter(p => p.status === 'completed').length || 0;
+    
+    return {
+      totalClients,
+      totalServices,
+      totalProjects,
+      pendingPayments,
+      overduePayments,
+      paidPayments,
+      inProgressProjects,
+      completedProjects
+    };
+  };
 
-  // Use TanStack Query with error handling
-  const { data: clients, isError: isClientsError } = useQuery({
-    queryKey: ['dashboard-clients'],
-    queryFn: () => db.clients.getAll(),
-    enabled: isSupabaseConnected === true,
-    retry: 1,
-    onError: (err: any) => {
-      console.error('Error loading clients:', err);
-      setError('Erro ao carregar dados de clientes.');
-    }
-  });
+  const metrics = calculateMetrics();
 
-  const { data: payments, isError: isPaymentsError } = useQuery({
-    queryKey: ['dashboard-payments'],
-    queryFn: () => db.payments.getAll(),
-    enabled: isSupabaseConnected === true,
-    retry: 1,
-    onError: (err: any) => {
-      console.error('Error loading payments:', err);
-    }
-  });
+  const isLoading = isLoadingClients || isLoadingPayments || isLoadingProjects || isLoadingServices;
 
-  const { data: projects, isError: isProjectsError } = useQuery({
-    queryKey: ['dashboard-projects'],
-    queryFn: () => db.projects.getAll(),
-    enabled: isSupabaseConnected === true,
-    retry: 1,
-    onError: (err: any) => {
-      console.error('Error loading projects:', err);
-    }
-  });
-
-  const { data: services, isError: isServicesError } = useQuery({
-    queryKey: ['dashboard-services'],
-    queryFn: () => db.services.getAll(),
-    enabled: isSupabaseConnected === true,
-    retry: 1,
-    onError: (err: any) => {
-      console.error('Error loading services:', err);
-    }
-  });
-
-  // Check if there are any data loading errors
-  const hasErrors = isClientsError || isPaymentsError || isProjectsError || isServicesError;
-
-  // Cálculos para estatísticas do dashboard
-  const totalClients = clients?.length || 0;
-  const totalRevenue = payments?.reduce((sum, payment) => sum + Number(payment.amount), 0) || 0;
-  const totalProjects = projects?.length || 0;
-  const activeServices = services?.filter(service => service.status === 'active').length || 0;
-  
-  // Projetos recentes
-  const recentProjects = projects?.slice(0, 3) || [];
-
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="p-6 bg-red-50 rounded-lg border border-red-200 my-4">
-        <h2 className="text-lg font-medium text-red-800">Erro ao carregar dados</h2>
-        <p className="text-red-600 mt-1">{error}</p>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Tentar novamente
-        </Button>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 rounded-full border-t-transparent"></div>
       </div>
     );
   }
@@ -96,142 +87,112 @@ const Dashboard = () => {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">Bem-vindo ao seu sistema de gerenciamento</p>
+        <p className="text-gray-500 mt-1">Bem-vindo, {user?.name}!</p>
       </div>
-      
-      {isSupabaseConnected === false && (
-        <SetupGuide />
-      )}
-      
-      {hasErrors && (
-        <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-amber-700">Ocorreram alguns erros ao carregar os dados. Algumas informações podem estar incompletas.</p>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Cards do dashboard */}
+
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Clientes</p>
-                <h3 className="text-2xl font-bold mt-1">{totalClients}</h3>
-              </div>
-              <div className="p-2 bg-blue-50 rounded-full">
-                <Users className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-blue-500" asChild>
-                <Link to="/clients">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+            <Users className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.totalClients}</div>
+            <p className="text-xs text-gray-500">Total de clientes cadastrados</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Faturamento</p>
-                <h3 className="text-2xl font-bold mt-1">{formatCurrency(totalRevenue)}</h3>
-              </div>
-              <div className="p-2 bg-green-50 rounded-full">
-                <DollarSign className="h-5 w-5 text-green-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-green-500" asChild>
-                <Link to="/finances">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Serviços</CardTitle>
+            <Package className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.totalServices}</div>
+            <p className="text-xs text-gray-500">Total de serviços ativos</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Projetos</p>
-                <h3 className="text-2xl font-bold mt-1">{totalProjects}</h3>
-              </div>
-              <div className="p-2 bg-purple-50 rounded-full">
-                <BarChart3 className="h-5 w-5 text-purple-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-purple-500" asChild>
-                <Link to="/projects">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium">Projetos</CardTitle>
+            <FileText className="h-4 w-4 text-gray-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{metrics.totalProjects}</div>
+            <p className="text-xs text-gray-500">{metrics.inProgressProjects} em andamento</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Serviços Ativos</p>
-                <h3 className="text-2xl font-bold mt-1">{activeServices}</h3>
-              </div>
-              <div className="p-2 bg-yellow-50 rounded-full">
-                <Clock className="h-5 w-5 text-yellow-500" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <Button variant="ghost" size="sm" className="p-0 h-auto text-sm text-yellow-500" asChild>
-                <Link to="/services">Ver detalhes <ArrowUpRight className="h-3 w-3 ml-1" /></Link>
-              </Button>
-            </div>
+        <Card className="bg-red-50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-sm font-medium text-red-600">Pagamentos Atrasados</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{metrics.overduePayments}</div>
+            <p className="text-xs text-red-500">Pagamentos que precisam de atenção</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="col-span-1 lg:col-span-2">
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Status Chart */}
+        <Card>
           <CardHeader>
-            <CardTitle>Projetos Recentes</CardTitle>
-            <CardDescription>Últimos projetos adicionados ao sistema</CardDescription>
+            <CardTitle>Status de Pagamentos</CardTitle>
+            <CardDescription>Distribuição dos pagamentos por status</CardDescription>
           </CardHeader>
-          <CardContent>
-            {recentProjects.length > 0 ? (
-              <div className="space-y-4">
-                {recentProjects.map((project) => (
-                  <div key={project.id} className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{project.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Cliente: {clients?.find(c => c.id === project.client_id)?.name || 'N/A'}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/projects/${project.id}`}>Detalhes</Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">Nenhum projeto encontrado</p>
-            )}
+          <CardContent className="h-80">
+            <Chart 
+              type="pie"
+              data={[
+                { name: 'Pagos', value: metrics.paidPayments },
+                { name: 'Pendentes', value: metrics.pendingPayments },
+                { name: 'Atrasados', value: metrics.overduePayments }
+              ]}
+              colors={['#10b981', '#f59e0b', '#ef4444']}
+            />
           </CardContent>
         </Card>
 
+        {/* Project Status Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Clientes Ativos</CardTitle>
-            <CardDescription>Total de clientes ativos</CardDescription>
+            <CardTitle>Status de Projetos</CardTitle>
+            <CardDescription>Distribuição dos projetos por status</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center h-40">
-              <h3 className="text-5xl font-bold text-primary">{totalClients}</h3>
-              <p className="text-sm text-muted-foreground mt-2">Total de clientes cadastrados</p>
-              <Button className="mt-4" asChild>
-                <Link to="/clients">Gerenciar Clientes</Link>
-              </Button>
-            </div>
+          <CardContent className="h-80">
+            <Chart 
+              type="pie"
+              data={[
+                { name: 'Em Andamento', value: metrics.inProgressProjects },
+                { name: 'Concluídos', value: metrics.completedProjects },
+                { name: 'Planejamento', value: metrics.totalProjects - metrics.inProgressProjects - metrics.completedProjects }
+              ]}
+              colors={['#3b82f6', '#10b981', '#6366f1']}
+            />
           </CardContent>
         </Card>
+      </div>
+
+      {/* Quick Access Links */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <ButtonLink href="/clients" variant="outline" className="h-20 flex flex-col items-center justify-center">
+          <Users className="h-5 w-5 mb-1" />
+          <span>Clientes</span>
+        </ButtonLink>
+        <ButtonLink href="/services" variant="outline" className="h-20 flex flex-col items-center justify-center">
+          <Package className="h-5 w-5 mb-1" />
+          <span>Serviços</span>
+        </ButtonLink>
+        <ButtonLink href="/projects" variant="outline" className="h-20 flex flex-col items-center justify-center">
+          <FileText className="h-5 w-5 mb-1" />
+          <span>Projetos</span>
+        </ButtonLink>
+        <ButtonLink href="/finances" variant="outline" className="h-20 flex flex-col items-center justify-center">
+          <Clock className="h-5 w-5 mb-1" />
+          <span>Pagamentos</span>
+        </ButtonLink>
       </div>
     </div>
   );

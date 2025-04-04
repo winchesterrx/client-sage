@@ -45,6 +45,8 @@ const UserManagement = () => {
         invitation_status: status,
         active
       });
+      console.log("Resposta da mutação:", res);
+  return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

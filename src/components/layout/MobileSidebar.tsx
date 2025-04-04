@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Users, 
@@ -10,8 +10,8 @@ import {
   Settings, 
   LogOut,
   CircleUser,
-  Menu,
-  X
+  X,
+  Menu, // Added missing Menu icon
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,11 @@ type NavItem = {
   label: string;
   href: string;
   icon: React.ReactNode;
+};
+
+type MobileSidebarProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const navItems: NavItem[] = [
@@ -56,12 +61,10 @@ const navItems: NavItem[] = [
   },
 ];
 
-const MobileSidebar = () => {
-  const [open, setOpen] = useState(false);
-
+const MobileSidebar = ({ open = false, onOpenChange }: MobileSidebarProps) => {
   return (
     <div className="fixed top-0 left-0 z-40 w-full bg-white border-b border-gray-200 h-16 flex items-center px-4">
-      <Sheet open={open} onOpenChange={setOpen}>
+      <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="mr-4">
             <Menu className="h-6 w-6" />
@@ -86,7 +89,7 @@ const MobileSidebar = () => {
                 <NavLink
                   key={item.href}
                   to={item.href}
-                  onClick={() => setOpen(false)}
+                  onClick={() => onOpenChange?.(false)}
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 group hover:bg-gray-100",

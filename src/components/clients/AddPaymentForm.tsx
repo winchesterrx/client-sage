@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -5,10 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { Calendar as CalendarIcon } from "lucide-react"; // Use Lucide React instead of Radix UI
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast"; // Updated import path
 import { db } from '@/lib/supabase';
 
 // Update the props interface to include onPaymentAdded
@@ -54,27 +55,31 @@ const AddPaymentForm = ({ clientId, onPaymentAdded }: AddPaymentFormProps) => {
     try {
       setLoading(true);
       
-      // Cast the status to the correct type
+      // Format dates to ISO strings for the database
       const paymentData = {
         client_id: clientId,
         service_id: parseInt(serviceId),
         amount: parseFloat(amount),
-        payment_date: paymentDate,
-        due_date: dueDate,
+        payment_date: paymentDate ? paymentDate.toISOString() : '',
+        due_date: dueDate ? dueDate.toISOString() : '',
         payment_method: paymentMethod,
         notes: notes || '',
-        status: status as 'pending' | 'paid' | 'overdue', // Type cast to match expected type
+        status: status,
       };
       
       await db.payments.create(paymentData);
       
-      toast.success("Pagamento adicionado com sucesso!");
+      toast({
+        title: "Sucesso",
+        description: "Pagamento adicionado com sucesso!",
+        variant: "default",
+      });
       
       // Reset form fields
       setServiceId('');
       setAmount('');
-      setPaymentDate('');
-      setDueDate('');
+      setPaymentDate(undefined);
+      setDueDate(undefined);
       setPaymentMethod('');
       setStatus('pending');
       setNotes('');
@@ -87,7 +92,11 @@ const AddPaymentForm = ({ clientId, onPaymentAdded }: AddPaymentFormProps) => {
       
     } catch (error) {
       console.error('Error adding payment:', error);
-      toast.error("Erro ao adicionar pagamento");
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar pagamento",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -198,7 +207,10 @@ const AddPaymentForm = ({ clientId, onPaymentAdded }: AddPaymentFormProps) => {
       </div>
       <div>
         <Label htmlFor="status">Status</Label>
-        <Select onValueChange={setStatus} defaultValue={status}>
+        <Select 
+          onValueChange={(value) => setStatus(value as 'pending' | 'paid' | 'overdue')}
+          defaultValue={status}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione o status" />
           </SelectTrigger>

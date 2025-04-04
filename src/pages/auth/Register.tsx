@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/supabase';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast'; // Updated import
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,8 +54,10 @@ const Register = () => {
       await db.users.create(userData);
       
       // Show success message after registration
-      toast.success("Registro realizado com sucesso!", {
-        description: "Aguarde a aprovação do administrador para acessar o sistema."
+      toast({
+        title: "Registro realizado com sucesso!",
+        description: "Aguarde a aprovação do administrador para acessar o sistema.",
+        variant: "default",
       });
       
       // Navigate to login after short delay
@@ -129,7 +133,7 @@ const Register = () => {
           {errors.general && <p className="text-red-500 text-sm">{errors.general}</p>}
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button disabled={loading} onClick={handleSubmit}>
+          <Button disabled={loading} onClick={(e) => handleSubmit(e as any as React.FormEvent<HTMLFormElement>)} type="submit">
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
           <p className="text-sm text-muted-foreground">

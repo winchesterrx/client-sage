@@ -202,19 +202,19 @@ const Dashboard = () => {
 
       {/* Quick Access Links */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        <ButtonLink href="/clients" variant="outline" className="h-20 flex flex-col items-center justify-center">
+        <ButtonLink href="/clients" to="/clients" variant="outline" className="h-20 flex flex-col items-center justify-center">
           <Users className="h-5 w-5 mb-1" />
           <span>Clientes</span>
         </ButtonLink>
-        <ButtonLink href="/services" variant="outline" className="h-20 flex flex-col items-center justify-center">
+        <ButtonLink href="/services" to="/services" variant="outline" className="h-20 flex flex-col items-center justify-center">
           <Package className="h-5 w-5 mb-1" />
           <span>Serviços</span>
         </ButtonLink>
-        <ButtonLink href="/projects" variant="outline" className="h-20 flex flex-col items-center justify-center">
+        <ButtonLink href="/projects" to="/projects" variant="outline" className="h-20 flex flex-col items-center justify-center">
           <FileText className="h-5 w-5 mb-1" />
           <span>Projetos</span>
         </ButtonLink>
-        <ButtonLink href="/finances" variant="outline" className="h-20 flex flex-col items-center justify-center">
+        <ButtonLink href="/finances" to="/finances" variant="outline" className="h-20 flex flex-col items-center justify-center">
           <Clock className="h-5 w-5 mb-1" />
           <span>Pagamentos</span>
         </ButtonLink>

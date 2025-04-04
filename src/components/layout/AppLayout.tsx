@@ -1,14 +1,15 @@
+
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileSidebar from './MobileSidebar';
 import Footer from './Footer';
-import { useMobile } from '@/hooks/useMobile';
+import { useIsMobile } from '@/hooks/use-mobile'; // Fixed hook import
 import { Menu } from 'lucide-react';
 
 const AppLayout = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   // Function to toggle mobile sidebar
   const toggleMobileSidebar = () => {
@@ -24,12 +25,9 @@ const AppLayout = () => {
         </div>
       )}
 
-      {/* Mobile sidebar - controlled by state */}
+      {/* Mobile sidebar */}
       {isMobile && (
-        <MobileSidebar 
-          isOpen={isMobileSidebarOpen} 
-          onClose={() => setIsMobileSidebarOpen(false)} 
-        />
+        <MobileSidebar open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen} />
       )}
 
       <div className="flex-1 flex flex-col">

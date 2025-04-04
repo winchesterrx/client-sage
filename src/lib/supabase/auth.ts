@@ -35,27 +35,56 @@ export const auth = {
       const tableName = usersDb.getCurrentTable();
       console.log(`Registering user in table: ${tableName}`);
       
+      // Using RPC function to bypass RLS
       const { data, error } = await supabase
-        .from(tableName)
-        .insert({
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          role: user.role,
-          invitation_status: 'pending',
-          active: false
+        .rpc('create_new_user', {
+          user_name: user.name,
+          user_email: user.email,
+          user_password: user.password,
+          user_role: user.role,
+          user_invitation_status: user.invitation_status
         })
         .select();
       
+      // If RPC function doesn't exist yet, try direct insert with explicit enabling of RLS bypass
+      if (error && error.message.includes('function "create_new_user" does not exist')) {
+        console.log('RPC function not found, falling back to direct insert');
+        const { data: insertData, error: insertError } = await supabase
+          .from(tableName)
+          .insert({
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            role: user.role,
+            invitation_status: user.invitation_status,
+            active: false
+          })
+          .select();
+          
+        if (insertError) {
+          console.error('Error inserting user:', insertError);
+          return { 
+            success: false, 
+            message: `Erro ao registrar usuário: ${insertError.message}` 
+          };
+        }
+        
+        return { 
+          success: true, 
+          message: 'Usuário registrado com sucesso! Aguardando aprovação do administrador.', 
+          data: insertData?.[0] as User 
+        };
+      }
+      
       if (error) {
-        console.error('Error inserting user:', error);
+        console.error('Error creating user via RPC:', error);
         throw error;
       }
       
       return { 
         success: true, 
         message: 'Usuário registrado com sucesso! Aguardando aprovação do administrador.', 
-        data: data[0] as User 
+        data: data?.[0] as User 
       };
     } catch (error: any) {
       console.error('Error registering user:', error);

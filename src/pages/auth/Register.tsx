@@ -39,6 +39,8 @@ const Register = () => {
     try {
       setLoading(true);
       
+      console.log("Attempting to register user with:", { name, email, role: "user", invitation_status: "pending" });
+      
       // Use auth.register - remove the 'active' property since it's not expected in the parameter
       const result = await auth.register({
         name,
@@ -130,7 +132,7 @@ const Register = () => {
           {errors.general && <p className="text-red-500 text-sm">{errors.general}</p>}
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button disabled={loading} onClick={(e) => handleSubmit(e as any as React.FormEvent<HTMLFormElement>)} type="submit">
+          <Button disabled={loading} className="w-full" onClick={(e) => handleSubmit(e as any as React.FormEvent<HTMLFormElement>)} type="submit">
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
           <p className="text-sm text-muted-foreground">

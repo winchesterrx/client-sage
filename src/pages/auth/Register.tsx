@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast'; // Updated import
+import { auth } from '@/lib/supabase/auth';
+import { toast } from 'sonner';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -18,8 +18,6 @@ const Register = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const { toast } = useToast();
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,31 +39,30 @@ const Register = () => {
     try {
       setLoading(true);
       
-      // Create new user with specific invitation_status type
-      const userData = {
+      // Use auth.register instead of db.users.create
+      const result = await auth.register({
         name,
         email,
         password,
-        role: "user" as const, // Specify role as a literal type
-        invitation_status: "pending" as const, // Use the correct literal type
+        role: "user", // Specify role as a literal type
+        invitation_status: "pending",
         active: false
-      };
-      
-      await db.users.create(userData);
-      
-      // Show success message after registration
-      toast({
-        title: "Registro realizado com sucesso!",
-        description: "Aguarde a aprovação do administrador para acessar o sistema.",
-        variant: "default",
       });
       
-      // Navigate to login after short delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      if (result.success) {
+        // Show success message after registration
+        toast(result.message);
+        
+        // Navigate to login after short delay
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        // Show error message
+        setErrors(prev => ({ ...prev, general: result.message }));
+      }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
       setErrors(prev => ({ 
         ...prev, 

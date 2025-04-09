@@ -8,15 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, UserX, Shield, Users } from 'lucide-react';
+import { UserCheck, UserX, Shield, Users, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const UserManagement = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [error, setError] = React.useState<string | null>(null);
 
   // Redirect if not master user
   React.useEffect(() => {
@@ -43,16 +45,17 @@ const UserManagement = () => {
   const updateUserMutation = useMutation({
     mutationFn: async ({
       userId,
-      accepted,
+      status,
+      active,
     }: {
       userId: number;
-      accepted: boolean;
+      status: 'accepted' | 'rejected';
+      active: boolean;
     }) => {
-      const status = accepted ? 'accepted' as const : 'rejected' as const;
-      console.log(`[MUTATION] Atualizando usuário ID: ${userId}, Status: ${status}, Active: ${accepted}`);
+      console.log(`[MUTATION] Atualizando usuário ID: ${userId}, Status: ${status}, Active: ${active}`);
 
       try {
-        const result = await db.users.updateInvitationStatus(userId, status, accepted);
+        const result = await db.users.updateInvitationStatus(userId, status, active);
         console.log('[MUTATION] Resultado:', result);
         return result;
       } catch (error) {
@@ -61,16 +64,25 @@ const UserManagement = () => {
       }
     },
     onSuccess: () => {
+      setError(null);
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
-    onError: (err) => {
+    onError: (err: any) => {
       console.error('Erro na mutação de update:', err);
+      setError(err.message || 'Ocorreu um erro ao processar a solicitação.');
     },
   });
 
   const handleInvitation = async (userId: number, accepted: boolean) => {
     try {
-      await updateUserMutation.mutateAsync({ userId, accepted });
+      setError(null);
+      const status = accepted ? 'accepted' as const : 'rejected' as const;
+      
+      await updateUserMutation.mutateAsync({ 
+        userId, 
+        status, 
+        active: accepted 
+      });
 
       toast({
         title: accepted ? 'Convite aceito' : 'Convite rejeitado',
@@ -78,7 +90,7 @@ const UserManagement = () => {
           ? 'O usuário agora tem acesso ao sistema.'
           : 'O usuário foi rejeitado e não poderá acessar o sistema.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao atualizar usuário:', error);
       toast({
         title: 'Erro',
@@ -108,6 +120,14 @@ const UserManagement = () => {
         <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
         <p className="text-gray-500 mt-1">Gerencie os usuários do sistema</p>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Pending Invitations */}
       <Card className="border-2 border-blue-200 bg-blue-50">
@@ -158,6 +178,7 @@ const UserManagement = () => {
                           size="sm"
                           className="text-green-600 border-green-600 hover:bg-green-100"
                           onClick={() => handleInvitation(user.id, true)}
+                          disabled={updateUserMutation.isPending}
                         >
                           <UserCheck className="h-4 w-4 mr-1" />
                           Aceitar
@@ -167,6 +188,7 @@ const UserManagement = () => {
                           size="sm"
                           className="text-red-600 border-red-600 hover:bg-red-100"
                           onClick={() => handleInvitation(user.id, false)}
+                          disabled={updateUserMutation.isPending}
                         >
                           <UserX className="h-4 w-4 mr-1" />
                           Rejeitar

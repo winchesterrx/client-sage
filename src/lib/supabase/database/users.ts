@@ -92,6 +92,7 @@ export const usersDb = {
   },
 
   update: async (id: number, user: Partial<User>): Promise<User> => {
+    console.log(`[usersDb.update] Atualizando usuário ID ${id} com dados:`, user);
     return dbGeneric.update<User>(USER_TABLE, id, user);
   },
 
@@ -132,7 +133,10 @@ export const usersDb = {
         })
         .eq('id', id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Erro ao atualizar status do convite:', updateError);
+        throw updateError;
+      }
       
       // Depois buscamos o registro atualizado separadamente
       const { data, error: fetchError } = await supabase
@@ -141,12 +145,18 @@ export const usersDb = {
         .eq('id', id)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Erro ao buscar usuário atualizado:', fetchError);
+        throw fetchError;
+      }
       
       if (!data) {
-        throw new Error(`Usuário com ID ${id} não encontrado após atualização`);
+        const errorMsg = `Usuário com ID ${id} não encontrado após atualização`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
+      console.log('Usuário atualizado com sucesso:', data);
       return data as User;
     } catch (error) {
       console.error('Erro ao atualizar status do convite:', error);

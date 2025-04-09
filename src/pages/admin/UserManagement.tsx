@@ -48,17 +48,17 @@ const UserManagement = () => {
       userId: number;
       accepted: boolean;
     }) => {
-      const updateData: Partial<User> = {
-        invitation_status: accepted ? 'accepted' as const : 'rejected' as const,
-        active: accepted,
-      };
+      const status = accepted ? 'accepted' as const : 'rejected' as const;
+      console.log(`[MUTATION] Atualizando usuário ID: ${userId}, Status: ${status}, Active: ${accepted}`);
 
-      console.log('[MUTATION] Atualizando usuário ID:', userId, updateData);
-
-      const result = await db.users.update(userId, updateData);
-      console.log('[MUTATION] Resultado:', result);
-
-      return result;
+      try {
+        const result = await db.users.updateInvitationStatus(userId, status, accepted);
+        console.log('[MUTATION] Resultado:', result);
+        return result;
+      } catch (error) {
+        console.error('[MUTATION] Erro:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/supabase';
@@ -49,27 +48,32 @@ const RequestsManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['pending-users'] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
+    onError: (error: any) => {
+      console.error('Error in mutation:', error);
+      toast.error(`Erro ao processar solicitação: ${error.message}`);
+    }
   });
 
-const handleInvitation = async (userId: number, status: 'accepted' | 'rejected') => {
-  console.log(`Aprovando ou rejeitando usuário ID: ${userId} com status: ${status}`);
+  const handleInvitation = async (userId: number, status: 'accepted' | 'rejected') => {
+    console.log(`Aprovando ou rejeitando usuário ID: ${userId} com status: ${status}`);
+    toast.loading(`Processando solicitação...`);
 
-  try {
-    await updateUserMutation.mutateAsync({ 
-      userId, 
-      status, 
-      active: status === 'accepted'
-    });
-    
-    toast.success(status === 'accepted' 
-      ? "Usuário aprovado com sucesso" 
-      : "Solicitação rejeitada");
-  } catch (error) {
-    console.error('Error updating user:', error);
-    toast.error("Erro ao processar solicitação");
-  }
-};
-
+    try {
+      const updatedUser = await updateUserMutation.mutateAsync({ 
+        userId, 
+        status, 
+        active: status === 'accepted'
+      });
+      
+      console.log('Usuário atualizado:', updatedUser);
+      toast.success(status === 'accepted' 
+        ? "Usuário aprovado com sucesso" 
+        : "Solicitação rejeitada");
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast.error(`Erro ao processar solicitação: ${error.message}`);
+    }
+  };
 
   if (isLoading) {
     return (

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/supabase';
@@ -47,8 +48,8 @@ const UserManagement = () => {
       userId: number;
       accepted: boolean;
     }) => {
-      const updateData = {
-        invitation_status: accepted ? 'accepted' : 'rejected',
+      const updateData: Partial<User> = {
+        invitation_status: accepted ? 'accepted' as const : 'rejected' as const,
         active: accepted,
       };
 

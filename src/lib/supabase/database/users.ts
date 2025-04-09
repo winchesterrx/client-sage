@@ -124,30 +124,21 @@ export const usersDb = {
     try {
       console.log(`Atualizando status de convite - ID: ${id}, Status: ${status}, Active: ${active}`);
       
-      // Primeiro atualizamos o registro
-      const { error: updateError } = await supabase
+      // IMPORTANTE: Usando a operação de atualização direta do Supabase
+      // em vez de usar o dbGeneric para garantir que funcione corretamente
+      const { data, error } = await supabase
         .from(USER_TABLE)
         .update({
           invitation_status: status,
-          active
+          active: active
         })
-        .eq('id', id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar status do convite:', updateError);
-        throw updateError;
-      }
-      
-      // Depois buscamos o registro atualizado separadamente
-      const { data, error: fetchError } = await supabase
-        .from(USER_TABLE)
-        .select('*')
         .eq('id', id)
+        .select('*')
         .single();
 
-      if (fetchError) {
-        console.error('Erro ao buscar usuário atualizado:', fetchError);
-        throw fetchError;
+      if (error) {
+        console.error('Erro ao atualizar status do convite:', error);
+        throw error;
       }
       
       if (!data) {
